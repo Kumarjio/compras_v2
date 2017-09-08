@@ -1,0 +1,45 @@
+.brand{
+  background: rgb(65,65,65) url("/images/tuya.png") no-repeat right;
+  text-indent: -10000px;
+  width: 75px;
+  height: 50px;
+}
+
+
+.navbar, .navbar-inner{
+  background-image: none;
+  height: 75px;
+  background-color: rgb(65,65,65);
+  filter: none;
+} 
+
+.navbar .container{
+  width: 940px;
+ 
+}
+
+.help-inline, .help-block{
+  display:none;
+}
+
+.ui-widget-content a{
+  color: #FFF;
+}
+
+ .modal{width:800px; margin:-250px 0 0 -400px;}
+#AsistentesModal{display:none;}
+#myModal{display:none;}
+.qq-upload-button input{height:60px;}
+input .span4{width:300px;}
+input .span5{width:380px;}
+.subnav { background: #f1f1f1;}
+.subnav-inner { width: 940px; margin: 0 auto;}
+.fix { position: fixed; top: 0; left:0; z-index: 1000; width: 100%; height: 32px;}
+.accordion-inner {padding:9px 0px;}
+.eleccion a{color:#FFF;}
+.aprobado{font-size:15px; font-weight:bold;}
+.orden-solicitud-accordion-inner{padding:5px 15px;}
+.orden_solicitud_row{width:310px; float:left; overflow:hidden;}
+.orden_solicitud_row_view{width:340px; float:left; overflow:hidden; margin-left:20px;}
+.orden_solicitud_row_view{float:left; overflow:hidden; margin-left:20px;}
+.orden_solicitud_costos_row{width:340px; float:left; overflow:hidden;}

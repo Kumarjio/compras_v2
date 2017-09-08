@@ -96,12 +96,29 @@ class Festivos extends CActiveRecord
             }
             return "$time 08:00:00";
         }
+
+        public function traeProximo($time) {
+            $time = date("Y-m-d",  strtotime("+1 day", strtotime($time)));
+            while (!$this->esHabil($time)){
+                $time = date("Y-m-d",  strtotime("+1 day", strtotime($time)));
+            }
+            return $time;
+        }
         
         public function sumarDias($time, $cantidad) {
             for($i=0; $i<$cantidad; $i++){
                 $time = $this->traerProximoDia($time);
             }
             return $time;
+        }
+
+        public function traeDias($time, $time2){
+        	$dias[] = $time;
+        	while (strtotime($time) <= strtotime($time2)){
+        		$time = $this->traeProximo($time);
+        		$dias[] = $time;
+            }
+            return $dias;
         }
         
 	/**

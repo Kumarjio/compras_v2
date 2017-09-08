@@ -120,10 +120,36 @@ class Medicos extends CActiveRecord
 		));
 	}
         
-        public function nombreCompleto($id_medico) {
-            $model = $this->findByPk($id_medico);
-            return $model->primer_nombre . ' ' .$model->segundo_nombre . ' ' .$model->primer_apellido . ' ' .$model->segundo_apellido;
-        }
+    public function nombreCompleto($id_medico) {
+        $model = $this->findByPk($id_medico);
+        return $model->primer_nombre . ' ' .$model->segundo_nombre . ' ' .$model->primer_apellido . ' ' .$model->segundo_apellido;
+    }
+
+    public function getNombreCompleto(){
+
+		$nombreCom = $this->primer_nombre;
+		if(empty($this->segundo_nombre))
+			$nombreCom .= " ".$this->primer_apellido;
+		else
+			$nombreCom .= " ".$this->segundo_nombre." ".$this->primer_apellido;
+
+		if(!empty($this->segundo_apellido))
+			$nombreCom .= " ".$this->segundo_apellido;
+
+		return $nombreCom;
+	}
+
+	protected function beforeValidate(){
+
+		if(empty($this->segundo_nombre))
+      		$this->segundo_nombre = " ";		
+		
+      	if(empty($this->segundo_apellido))
+      		$this->segundo_apellido = " ";
+
+
+		return parent::beforeValidate();
+	}
         
 	/**
 	 * Returns the static model of the specified AR class.

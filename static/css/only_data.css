@@ -1,0 +1,13 @@
+input.hide-me { display: none !important; }
+
+textarea.hide-me { display: none !important; }
+
+select.hide-me { display: none !important; }
+
+a.hide-me { display: none !important; }
+
+a.update, a.delete { display: none !important; }
+
+form span.print_disp_off {display: block !important; }
+form label.print_disp_off {display: none !important; }
+form label.print_disp_on {display: block !important; }

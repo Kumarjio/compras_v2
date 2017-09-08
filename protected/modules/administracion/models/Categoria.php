@@ -8,6 +8,8 @@
  * @property string $nombre_categoria
  *
  * The followings are the available model relations:
+ * @property EntidadCategoria[] $entidadCategorias
+ * @property CategoriaAfiliado[] $categoriaAfiliados
  * @property Pacientes[] $pacientes
  */
 class Categoria extends CActiveRecord
@@ -43,6 +45,8 @@ class Categoria extends CActiveRecord
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
+			'entidadCategorias' => array(self::HAS_MANY, 'EntidadCategoria', 'id_categoria'),
+			'categoriaAfiliados' => array(self::HAS_MANY, 'CategoriaAfiliado', 'id_categoria'),
 			'pacientes' => array(self::HAS_MANY, 'Pacientes', 'id_categoria'),
 		);
 	}

@@ -1,0 +1,67 @@
+
+.meny {
+	margin-left: -600px; /* "#menu" width */
+	width: 600px;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000; /* so the menu or its navicon stays above all content */
+    background: #191818;
+    overflow-y: auto;
+}
+
+.meny div#meny-content {
+	padding: 1em;
+}
+	
+.errorMessage{
+	color:red;
+	font-weight:bold;
+}
+
+
+a.under {
+   text-decoration: underline;
+}
+
+
+/*404 Error Page v1 
+------------------------------------*/
+.error-v1 {
+    margin-bottom: 20px;
+    text-align: center; 
+}
+
+.error-v1 p {
+    color: #555;
+    font-size: 20px;
+}
+
+.error-v1 span {
+    color: #555;
+    display: block;
+    font-size: 40px;
+}
+
+.error-v1 span.error-v1-title {
+    color: #777;    
+    font-size: 180px;
+    font-family: 'Kite One', sans-serif;    
+}
+
+/*For Mobile Devices*/
+@media (max-width: 500px) { 
+    .error-v1 p {
+        font-size: 16px;
+    }   
+
+    .error-v1 span {
+        font-size: 30px;
+    }
+
+    .error-v1 span.error-v1-title {
+        font-size: 140px;
+    }
+}

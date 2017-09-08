@@ -4,8 +4,9 @@
  * This is the model class for table "ocupacion".
  *
  * The followings are the available columns in table 'ocupacion':
- * @property integer $id_ocupacion
+ * @property string $id_ocupacion
  * @property string $ocupacion
+ * @property integer $estado
  *
  * The followings are the available model relations:
  * @property Pacientes[] $pacientes
@@ -28,10 +29,11 @@ class Ocupacion extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('ocupacion', 'required'),
+			array('id_ocupacion, ocupacion', 'required'),
+			array('estado', 'numerical', 'integerOnly'=>true),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id_ocupacion, ocupacion', 'safe', 'on'=>'search'),
+			array('id_ocupacion, ocupacion, estado', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -55,6 +57,7 @@ class Ocupacion extends CActiveRecord
 		return array(
 			'id_ocupacion' => 'Id Ocupacion',
 			'ocupacion' => 'Ocupacion',
+			'estado' => 'Estado',
 		);
 	}
 
@@ -76,8 +79,9 @@ class Ocupacion extends CActiveRecord
 
 		$criteria=new CDbCriteria;
 
-		$criteria->compare('id_ocupacion',$this->id_ocupacion);
+		$criteria->compare('id_ocupacion',$this->id_ocupacion,true);
 		$criteria->compare('ocupacion',$this->ocupacion,true);
+		$criteria->compare('estado',$this->estado);
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,

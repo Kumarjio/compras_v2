@@ -16,25 +16,27 @@ class SMailSender
 			$this->_mailer->Username   = "santios";
 			$this->_mailer->Password   = "imagineROOT1";            
 			$this->_mailer->CharSet = 'UTF-8';
-			$this->_mailer->FromName = 'Administrativo - Viajes - Desarrollo';
+			$this->_mailer->FromName = 'Clínica San Diego';
 			$this->_mailer->From = 'santios@imagineltda.com';
 
 		}else{
 			$this->_mailer->IsSMTP();
 			$this->_mailer->SMTPAuth   = true;
-                        $this->_mailer->SMTPSecure = "ssl";
+            $this->_mailer->SMTPSecure = "ssl";
 			$this->_mailer->Host       = "smtp.gmail.com";     
 			$this->_mailer->Port       = 465;
-			$this->_mailer->Username   = "jairo.nino@imagineltda.com";
-			$this->_mailer->Password   = "ahl2631cvs46c";            
+			//$this->_mailer->Username   = "jairo.nino@imagineltda.com";
+			//$this->_mailer->Password   = "ahl2631cvs46c";   
+			$this->_mailer->Username   = "clinicasandiego.imagine@gmail.com";
+			$this->_mailer->Password   = "Img_$4ND.2016*";           
 			$this->_mailer->CharSet = 'UTF-8';
-			$this->_mailer->FromName = 'Pruebas - Clinica San Diego';
-//			$this->_mailer->From = 'jairo.nino@imagineltda.com';
-
+			$this->_mailer->FromName = 'Pruebas - Clínica San Diego';
+//          $img = dirname(Yii::app()->request->scriptFile).'/images/logo-clinica-sandiego.png';
+//          $this->_mailer->AddEmbeddedImage($img, 'imagen', $img, "base64", "image/png");
 			if(isset(Yii::app()->params->test_cuenta_email) && Yii::app()->params->test_cuenta_email == 1){
-				$this->_mailer->From = 'notificacionesviajes@tarjetaexito.com.co';
+				$this->_mailer->From = 'clinicasandiego.imagine@gmail.com';
 			}else{
-				$this->_mailer->From = 'notificaciones_clinica_sandiego@clinicasandiego.com.co';
+				$this->_mailer->From = 'clinicasandiego.imagine@gmail.com';
 			}
 			
 		}

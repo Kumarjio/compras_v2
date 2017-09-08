@@ -26,12 +26,9 @@ class SiteController extends Controller
 	 * This is the default 'index' action that is invoked
 	 * when an action is not explicitly requested by users.
 	 */
-	public function actionIndex()
-	{
-		// renders the view file 'protected/views/site/index.php'
-		// using the default layout 'protected/views/layouts/main.php'
-      //Yii::app()->mailer->sendDocumentos("santios@gmail.com");
-		$this->render('index');
+	public function actionIndex(){
+		$model= new Recepcion();
+		$this->render('index',array('model'=>$model));
 	}
 
 	/**
@@ -54,7 +51,6 @@ class SiteController extends Controller
 	 */
 	public function actionLogin()
 	{
-           
 	  //if(Yii::app()->user->isGuest)
 	    //$this->redirect($this->createUrl('agendamiento'));
 	  /*
@@ -92,16 +88,23 @@ class SiteController extends Controller
 		$this->render('login',array('form'=>$form, 'auth'=>$auth));
 	  }
 	  */
-          $form=new LoginForm;
-          if(isset($_POST['LoginForm'])){
-              $form->attributes = $_POST['LoginForm'];
-              if($form->validate() && $form->login()){
-                  $this->redirect(Yii::app()->user->returnUrl);
-              }
-          }
-          $this->render('login',array('form'=>$form));  
-	}
+	  
+		if(!Yii::app()->user->isGuest){
+			$this->redirect($this->createUrl('site/index'));
+		}
+        $form = new LoginForm;
 
+        if(isset($_POST['LoginForm'])){
+
+            $form->attributes = $_POST['LoginForm'];
+            //$form->username = strtolower($form->username);
+
+          	if($form->validate() && $form->login()){
+              	$this->redirect(Yii::app()->user->returnUrl);
+          	}
+        }
+        $this->render('login',array('form'=>$form));
+	}
 
 	/**
 	 * Logs out the current user and redirect to homepage.

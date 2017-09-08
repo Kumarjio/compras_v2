@@ -65,27 +65,10 @@ class TbEditableDetailView extends CDetailView
             $options['editable'] = CMap::mergeArray($this->_data, $options['editable']);
 
             //options to be passed into TbEditableField (constructed from $options['editable'])
-            if(isset($options['otros'])){
-                
-                $widgetOptions = array(
-                    'type'=>$options['otros']['type'],
-                    'model'     => $this->data,
-                    'attribute' => $options['name'],
-                    'source'=>$options['otros']['source'],
-                    'title'=> $options['otros']['title']   ,
-                    'htmlOptions'=>$options['otros']['htmlOptions']
-                );
-            }
-            else {
-                $widgetOptions = array(
-                    'model'     => $this->data,
-                    'attribute' => $options['name'],
-                );
-            
-            }
-//            if($options['name']=='correo')
-//                die($templateData['{value}']);
-                //die(print_r($widgetOptions));
+            $widgetOptions = array(
+                'model'     => $this->data,
+                'attribute' => $options['name']
+            );
 
             //if value in detailview options provided, set text directly (as value here means text)
             if(isset($options['value']) && $options['value'] !== null) {

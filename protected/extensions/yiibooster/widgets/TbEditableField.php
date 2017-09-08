@@ -140,7 +140,7 @@ class TbEditableField extends TbEditable
               'Select' => array('select', 'date'),
               'Check' => array('checklist')
             );
-            $title = Yii::t('TbEditableField.editable', 'Ingrese');
+            $title = Yii::t('TbEditableField.editable', 'Enter');
             foreach($titles as $t => $types) {
                 if(in_array($this->type, $types)) {
                    $title = Yii::t('TbEditableField.editable', $t);

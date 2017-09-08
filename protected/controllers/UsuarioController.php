@@ -1,0 +1,251 @@
+<?php
+
+class UsuarioController extends Controller
+{
+	/**
+	 * @var string the default layout for the views. Defaults to '//layouts/column2', meaning
+	 * using two-column layout. See 'protected/views/layouts/column2.php'.
+	 */
+	//public $layout='//layouts/column2';
+
+	/**
+	 * @return array action filters
+	 */
+	public function filters()
+	{
+		return array(
+			'accessControl', // perform access control for CRUD operations
+			'postOnly + delete', // we only allow deletion via POST request
+		);
+	}
+
+	/**
+	 * Specifies the access control rules.
+	 * This method is used by the 'accessControl' filter.
+	 * @return array access control rules
+	 */
+	public function accessRules()
+	{
+		return array(
+			array('allow',  // allow all users to perform 'index' and 'view' actions
+				'actions'=>array('index','view'),
+				'users'=>array('*'),
+			),
+			array('allow', // allow authenticated user to perform 'create' and 'update' actions
+				'actions'=>array('create','update','admin','verRoles','inhabilitar','valida'),
+				'users'=>array('@'),
+			),
+			array('allow', // allow admin user to perform 'admin' and 'delete' actions
+				'actions'=>array('admin','delete'),
+				'users'=>array('admin'),
+			),
+			array('deny',  // deny all users
+				'users'=>array('*'),
+			),
+		);
+	}
+
+	/**
+	 * Displays a particular model.
+	 * @param integer $id the ID of the model to be displayed
+	 */
+	public function actionView($id)
+	{
+		$this->render('view',array(
+			'model'=>$this->loadModel($id),
+		));
+	}
+
+	/**
+	 * Creates a new model.
+	 * If creation is successful, the browser will be redirected to the 'view' page.
+	 */
+	public function actionCreate()
+	{
+		if(Yii::App()->request->isAjaxRequest){
+			$model = new Usuario;
+			$roles = new UsuariosRoles;
+			$aux = true;
+			if(isset($_POST['Usuario'])){
+				$model->attributes=$_POST['Usuario'];
+				$roles->attributes=$_POST['UsuariosRoles'];
+				$roles->id_usuario = $model->usuario;
+				$model->usuario_creacion = Yii::app()->user->usuario;
+				if($model->validate() && $roles->validate()){
+					$model->contraseña = md5($model->contraseña);
+					$model->repetir = md5($model->repetir);
+					if($model->save()){
+						$roles->id_usuario = $model->id;
+						$roles->save();
+						/*foreach ($roles->id_rol as $id_rol) {
+							$usuarios_roles = new UsuariosRoles;
+							$usuarios_roles->id_usuario = $model->id;
+	        	    		$usuarios_roles->id_rol = $id_rol;
+							$usuarios_roles->save();
+						}*/
+					}else{
+						$aux = false;
+					}
+				}else{
+					$aux = false;
+				}
+			}
+			if($aux){
+				echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('create', array('model' => $model,'roles' => $roles), true, true)));		
+			}else{
+				echo CJSON::encode(array('status'=>'error', 'content' => $this->renderPartial('create', array('model' => $model,'roles' => $roles), true, true)));
+			}
+		}
+	}
+	/**
+	 * Updates a particular model.
+	 * If update is successful, the browser will be redirected to the 'view' page.
+	 * @param integer $id the ID of the model to be updated
+	 */
+	public function actionUpdate()
+	{
+		if(Yii::App()->request->isAjaxRequest){
+			$aux = true;
+			if(isset($_POST['Usuario'])){
+				$model=Usuario::model()->findByPk($_POST['Usuario']['id']);
+				$roles = new UsuariosRoles;
+				$model->attributes=$_POST['Usuario'];
+				$roles->attributes=$_POST['UsuariosRoles'];
+				$roles->id_usuario = $model->usuario;
+				$model->usuario_creacion = Yii::app()->user->usuario;
+				if($model->validate() && $roles->validate()){
+					if($model->save()){
+						//$user = UsuariosRoles::model()->deleteAllByAttributes(array("id_usuario"=>$model->id));
+						$id = UsuariosRoles::model()->findByAttributes(array("id_usuario"=>$model->id));
+						$usuarios_roles=UsuariosRoles::model()->findByPk($id->id);
+						$usuarios_roles->id_usuario = $model->id;
+						$usuarios_roles->id_rol = $roles->id_rol;
+						$usuarios_roles->save();
+						/*foreach ($roles->id_rol as $id_rol) {
+							$usuarios_roles = new UsuariosRoles;
+							$usuarios_roles->id_usuario = $model->id;
+	        	    		$usuarios_roles->id_rol = $id_rol;
+							$usuarios_roles->save();
+						}*/
+					}else{
+						$aux = false;
+					}
+				}else{
+					$aux = false;
+				}
+			}else{
+				$id = $_POST["id"];
+				$model=$this->loadModel($id);
+				$roles = new UsuariosRoles;
+				$rol = UsuariosRoles::model()->findAllByAttributes(array("id_usuario"=>$model->id));
+				$model->repetir = $model->contraseña;
+				if($rol){
+					$valor = array();
+					$i = 0;
+					foreach ($rol as $campo){
+		        		$valor[$i] = $campo->id_rol;
+		        		$i++;
+					}
+					$roles->id_rol = $valor;
+				}
+			}
+			if($aux){
+				echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('update', array('model' => $model,'roles' => $roles), true, true)));
+			}else{
+				echo CJSON::encode(array('status'=>'error', 'content' => $this->renderPartial('update', array('model' => $model,'roles' => $roles), true, true)));
+			}
+		}
+	}
+	/**
+	 * Deletes a particular model.
+	 * If deletion is successful, the browser will be redirected to the 'admin' page.
+	 * @param integer $id the ID of the model to be deleted
+	 */
+	public function actionDelete($id)
+	{
+		$this->loadModel($id)->delete();
+
+		// if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
+		if(!isset($_GET['ajax']))
+			$this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('admin'));
+	}
+
+	/**
+	 * Lists all models.
+	 */
+	public function actionIndex()
+	{
+		$dataProvider=new CActiveDataProvider('Usuario');
+		$this->render('index',array(
+			'dataProvider'=>$dataProvider,
+		));
+	}
+
+	/**
+	 * Manages all models.
+	 */
+	public function actionAdmin()
+	{
+		$model=new Usuario('search');
+		$model->unsetAttributes();  // clear any default values
+		if(isset($_GET['Usuario']))
+			$model->attributes=$_GET['Usuario'];
+
+		$this->render('admin',array(
+			'model'=>$model,
+		));
+	}
+
+	/**
+	 * Returns the data model based on the primary key given in the GET variable.
+	 * If the data model is not found, an HTTP exception will be raised.
+	 * @param integer $id the ID of the model to be loaded
+	 * @return Usuario the loaded model
+	 * @throws CHttpException
+	 */
+	public function loadModel($id)
+	{
+		$model=Usuario::model()->findByPk($id);
+		if($model===null)
+			throw new CHttpException(404,'The requested page does not exist.');
+		return $model;
+	}
+
+	/**
+	 * Performs the AJAX validation.
+	 * @param Usuario $model the model to be validated
+	 */
+	protected function performAjaxValidation($model)
+	{
+		if(isset($_POST['ajax']) && $_POST['ajax']==='usuario-form')
+		{
+			echo CActiveForm::validate($model);
+			Yii::app()->end();
+		}
+	}
+	public function actionInhabilitar()
+	{
+		$usuario = $_POST['usuario'];
+		$consulta = Usuario::model()->findByAttributes(array("usuario"=>$usuario));
+		$model = Usuario::model()->findByPk($consulta->id);
+		$model->repetir = $model->contraseña;
+		$model->activo = false;
+		if($model->save()){
+			die("<h5 align='center'>Usuario Inhabilitado.</h5>");
+		}else{
+			die;
+		}
+
+	}
+	public function actionValida()
+	{
+		$usuario = $_POST['usuario'];
+		$consulta = Trazabilidad::model()->findAllByAttributes(array("user_asign"=>$usuario,"estado"=>"1"));
+		$count = count( $consulta );
+		if($consulta){
+			die("<h5 align='center' class='red'>Hay $count casos pendientes por este usuario.</h5>");
+		}else{
+			die;
+		}
+	}
+}
