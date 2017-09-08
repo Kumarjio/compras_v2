@@ -188,8 +188,6 @@ class RecepcionController extends Controller
 			$empresa->attributes = $_POST['EmpresaPersona'];
 			$adjuntos->attributes = $_POST['AdjuntosRecepcion'];
 			$adjuntos->archivo = CUploadedFile::getInstance($adjuntos,'archivo');
-			print_r($adjuntos->archivo);
-			die;
 			$model->user_recepcion = Yii::app()->user->usuario;
 			if($model->validate()){
 				if($model->tipo_documento == "1"){
