@@ -37,13 +37,31 @@ class LoginFormDev extends CFormModel
 
 	public static function usuarioRol(){
 		return array(
-			array('id' =>'563|NORMAL', 'nombre' => 'Solicitante'),
-			array('id' =>'522|CYC991', 'nombre' => 'Jefe'),
-			array('id' =>'502|CYC992', 'nombre' => 'Gerente'),
-			array('id' =>'466|CYC996', 'nombre' => 'Analista Administrativo'),
-			array('id' =>'375|OPERACIONES', 'nombre' => 'Operaciones'),
-			array('id' =>'557|VIA0999', 'nombre' => 'Secretaria')
-			
+			array('id' =>'34|CYC403', 'nombre' => 'Solicitante'),
+			array('id' =>'691|CYC991', 'nombre' => 'Jefe'),//522
+			array('id' =>'792|CYC992', 'nombre' => 'Director'),
+			array('id' =>'503|CYC992', 'nombre' => 'Gerente'),//502
+			array('id' =>'777|CYC996', 'nombre' => 'Analista Compras'),
+			array('id' =>'139|CYC996', 'nombre' => 'Analista Compras Daniela'),
+			array('id' =>'515|CYC400', 'nombre' => 'Jefe Facturacion'),
+			array('id' =>'138|CYC400', 'nombre' => 'Responsable facturación'),
+			array('id' =>'451|CYC992', 'nombre' => 'Gerente Facturacion'),
+			array('id' =>'466|CYC401', 'nombre' => 'Causación'),
+			array('id' =>'73|CYC400', 'nombre' => 'Jefe Administrativo'),
+			array('id' =>'468|CYC404', 'nombre' => 'Operaciones'),
+			array('id' =>'771|CYC997', 'nombre' => 'Vicepresidente'),
+			array('id' =>'504|CYC992', 'nombre' => 'Gerencia Admin'),
+			array('id' =>'515|CYC995', 'nombre' => 'Comite Compras'),
+			array('id' =>'32|CYC994', 'nombre' => 'Jefe de Compras'),
+			array('id' =>'504|CYC993', 'nombre' => 'Presidencia'),
+			array('id' =>'504|CYC990', 'nombre' => 'Junta'),
+			array('id' =>'276|CYC997', 'nombre' => 'Administrativo'),
+			array('id' =>'59|CYC999', 'nombre' => 'Willies'),
+			array('id' =>'592|CYC998', 'nombre' => 'Juridico'),
+			array('id' =>'595|CYC989', 'nombre' => 'Contratación'),
+			array('id' =>'595|CYC988', 'nombre' => 'Consulta'),
+			array('id' =>'595|CYC986', 'nombre' => 'Edición'),
+			array('id' =>'595|CYC987', 'nombre' => 'Eliminación'),
 		);
 	}
 	

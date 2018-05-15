@@ -1,0 +1,29 @@
+--- modules/facturacion/views/facturas/_form_caus.php
++++ modules/facturacion/views/facturas/_form_caus.php
+@@ -75,7 +75,7 @@
+                                     (
+                                     'delete' => array
+                                         (
+-                                        'visible' => ($this->getAction()->getId()=='view')?'false': '$data->idFactura->usuario_actual == Yii::app()->user->getState("id_empleado")',//'$data->permitirEliminar()'
++                                        'visible' => '$data->idFactura->usuario_actual == Yii::app()->user->getState("id_empleado")',//'$data->permitirEliminar()'
+                                     )
+                                 ),
+                                 'afterDelete' => 'function(link, success, data){ if(success){  $(\'#proveedores-seleccion-grid\').yiiGridView.update(\'proveedores-seleccion-grid\'); }}',
+@@ -151,7 +151,7 @@
+                                             (
+                                             'delete' => array
+                                                 (
+-                                        'visible' => ($this->getAction()->getId()=='view')?'false': '$data->idFactura->usuario_actual == Yii::app()->user->getState("id_empleado")',//'$data->permitirEliminar()'
++                                        'visible' => '$data->idFactura->usuario_actual == Yii::app()->user->getState("id_empleado")',//'$data->permitirEliminar()'
+                                             )
+                                         ),
+                                         //'afterDelete' => 'function(link, success, data){ if(success){  $(\'#proveedores-seleccion-grid\').yiiGridView.update(\'proveedores-seleccion-grid\'); }}',
+@@ -207,7 +207,7 @@
+                                             (
+                                             'delete' => array
+                                                 (
+-                                        'visible' => ($this->getAction()->getId()=='view')?'false': '$data->idFactura->usuario_actual == Yii::app()->user->getState("id_empleado")',//'$data->permitirEliminar()'
++                                        'visible' => '$data->idFactura->usuario_actual == Yii::app()->user->getState("id_empleado")',//'$data->permitirEliminar()'
+                                             )
+                                         ),
+                                         //'afterDelete' => 'function(link, success, data){ if(success){  $(\'#proveedores-seleccion-grid\').yiiGridView.update(\'proveedores-seleccion-grid\'); }}',

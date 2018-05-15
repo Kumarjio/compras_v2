@@ -8,7 +8,7 @@
 	'enableAjaxValidation'=>false,
 	'enableClientValidation' => true,
 	'htmlOptions' => array(
-		'onsubmit'=> 'jQuery.ajax({\'url\':\'/correspondencia/index.php/roles/update\',\'dataType\':\'json\',\'data\':$(this).serialize(),\'type\':\'post\',\'success\':function(data){if(data.status == \'success\'){$(\'#dialogo-rol\').modal(\'hide\'); $(\'#rol-grid\').yiiGridView.update(\'rol-grid\');}else{$(\'#body-rol\').html(data.content);}},\'cache\':false});return false;'
+		'onsubmit'=> 'jQuery.ajax({\'url\':\''.Yii::app()->createUrl('roles/update').'\',\'dataType\':\'json\',\'data\':$(this).serialize(),\'type\':\'post\',\'success\':function(data){if(data.status == \'success\'){$(\'#dialogo-rol\').modal(\'hide\'); $(\'#rol-grid\').yiiGridView.update(\'rol-grid\');}else{$(\'#body-rol\').html(data.content);}},\'cache\':false});return false;'
 	),
 	'clientOptions' => array(
         'validateOnSubmit' => true,

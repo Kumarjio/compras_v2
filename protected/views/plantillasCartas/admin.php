@@ -1,7 +1,9 @@
 <div class="x_title">
-  <h2>Plantillas</h2>
-    <ul class="nav navbar-right panel_toolbox">
-    </ul>
+	<div class='col-md-12'>
+		<h2>Plantillas</h2>
+	</div>
+	<ul class="nav navbar-right panel_toolbox">
+	</ul>
   <div class="clearfix"></div>
 </div>
 <br>
@@ -16,15 +18,24 @@
 		)); ?>
 	</div>
 </div>
+<div class='col-md-9'></div>
+<div class='col-md-2'>
+	<?php echo CHtml::activeTextField($model,'buscar',array('class'=>'form-control','maxlength'=>'24','placeholder'=>'Consulta plantilla...')); ?>
+</div>
 <div class="row">
 </div>
 <br>
 <?php $this->widget('booster.widgets.TbGridView',array(
 	'id'=>'plantilla-grid',
 	'dataProvider'=>$model->search_detalle(),
+	//'filter'=>$model,
+	'filterSelector'=>'{filter}, #PlantillasCartas_buscar, select',
+	'ajaxType'=>'POST',
 	'type' => 'striped',
 	'columns'=>array(
-		array('header'=>'Plantilla','value'=>'$data->nombre'),
+		array('header'=>'Plantilla',
+			  'name'=>'nombre',
+			  'value'=>'ucwords(strtolower($data->nombre))'),
 		array(
 		'header'=>'Modificar',
         'class'=>'booster.widgets.TbButtonColumn',
@@ -34,8 +45,9 @@
               'label'=>'Modificar',
               'url'=>'$data->id',
               'icon'=>'glyphicon glyphicon-pencil',
+			  'options'=>array('style'=> 'font-size: 1.3em;'),
               'visible' => '$data->id != 1',
-              'click'=> 'js:function(){return update(this);}',
+              'click'=> 'js:function(){return validaUpdate(this);}',
           ),
         )
       ),
@@ -48,22 +60,32 @@
               'label'=>'Tipologias',
               'url'=>'$data->id',
               'icon'=>'glyphicon glyphicon-eye-open',
+			  'options'=>array('style'=> 'font-size: 1.3em;'),
               'visible' => '$data->id != 1',
               'click'=> 'js:function(){return tipologias(this);}',
           ),
         )
       ),
       array(
-      	'header'=>'Inhabilitar',	
+      	'header'=>'Habilitar / Inhabilitar',	
 	    'class'=>'booster.widgets.TbButtonColumn',
-	    'template'=>'{inhabilitar}',
+	    'template'=>'{inhabilitar}{habilitar}',
 	    'buttons' => array(
 	    	'inhabilitar' => array(
 	          'label'=>'Inhabilitar',
 	          'url'=>'$data->id',
 	          'icon'=>'glyphicon glyphicon-remove',
-	          'visible' => '$data->id != 1',
+			  'options'=>array('style'=> 'font-size: 1.3em;'),
+	          'visible' => '$data->id != 1 && $data->activa',
 	          'click'=> 'js:function(){return inhabilitar(this);}',
+	      ),
+	     	'habilitar' => array(
+	          'label'=>'Habilitar',
+	          'url'=>'$data->id',
+	          'icon'=>'glyphicon glyphicon-ok',
+			  'options'=>array('style'=> 'font-size: 1.3em;'),
+	          'visible' => '$data->id != 1 && !$data->activa',
+	          'click'=> 'js:function(){return habilitar(this);}',
 	      ),
 	    )
 	  ),
@@ -126,24 +148,95 @@ function tipologias(id){
 }
 function inhabilitar(id){
 	var id = $(id).attr("href");
+	bootbox.confirm({
+	    message: "<h4>¿Esta seguro de inhabilitar esta plantilla?</h4>",
+	    buttons: {
+	        confirm: {
+	            label: "Confirmar",
+	            className: "btn-info"
+	        },
+	        cancel: {
+	            label: "Cancelar",
+	            className: "btn-default"
+	        }
+	    },
+	    callback: function (confirm) {
+		    if(confirm){
+			    <?php echo CHtml::ajax(
+				    array(
+				      'type' => 'POST',
+				      'data' => array('id' => 'js:id'),
+				      'url' => $this->createUrl("inhabilitar"),
+				      'success' => 'function(res){
+				      	if(res){
+							$("#dialogo-plantilla #body-plantilla").html(res);
+				        	$("#dialogo-plantilla").modal("show");
+				        	$("#plantilla-grid").yiiGridView.update("plantilla-grid");
+				      	}
+				      }'
+				    )
+				);?>
+		    }
+	    }
+  	});
+  return false;
+}
+function habilitar(id){
+	var id = $(id).attr("href");
+		bootbox.confirm({
+	    message: "<h4>¿Esta seguro de Habilitar esta plantilla?</h4>",
+	    buttons: {
+	        confirm: {
+	            label: "Confirmar",
+	            className: "btn-info"
+	        },
+	        cancel: {
+	            label: "Cancelar",
+	            className: "btn-default"
+	        }
+	    },
+	    callback: function (confirm) {
+		    if(confirm){
+			    <?php echo CHtml::ajax(
+				    array(
+				      'type' => 'POST',
+				      'data' => array('id' => 'js:id'),
+				      'url' => $this->createUrl("habilitar"),
+				      'success' => 'function(res){
+				      	if(res){
+							$("#dialogo-plantilla #body-plantilla").html(res);
+				        	$("#dialogo-plantilla").modal("show");
+				        	$("#plantilla-grid").yiiGridView.update("plantilla-grid");
+				      	}
+				      }'
+				    )
+				);?>
+		    }
+	    }
+  	});
+  return false;
+}
+function validaUpdate(id){
+    var id = $(id).attr("href");
     <?php echo CHtml::ajax(
 	    array(
 	      'type' => 'POST',
 	      'data' => array('id' => 'js:id'),
-	      'url' => $this->createUrl("inhabilitar"),
-	      'success' => 'function(res){
-	      	if(res){
-				$("#dialogo-plantilla #body-plantilla").html(res);
-	        	$("#dialogo-plantilla").modal("show");
-	        	$("#plantilla-grid").yiiGridView.update("plantilla-grid");
-	      	}
+	      'url' => $this->createUrl("validarUpdate"),
+	      'dataType'=>'json',
+	      'success' => 'function(data){
+	      		if(data.status == "success"){
+	      			update(id);
+	        	}else{
+	        		$("#dialogo-plantilla #body-plantilla").html(data.content);
+	        		$("#dialogo-plantilla").modal("show");
+	        	}
 	      }'
 	    )
 	);?>
-	return false;
+    return false;
 }
 function update(id){
-    var id = $(id).attr("href");
     <?php echo CHtml::ajax(
 	    array(
 	      'type' => 'POST',
@@ -158,6 +251,5 @@ function update(id){
 	      }'
 	    )
 	);?>
-    return false;
 }
 </script>

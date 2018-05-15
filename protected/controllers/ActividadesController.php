@@ -32,7 +32,7 @@ class ActividadesController extends Controller
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('create','update','prueba2','index','carta','cargarArchivo','copias'),
+				'actions'=>array('create','update','prueba2','index','carta','cargarArchivo','copias','admin','editar','consultaEmail','cartasRespuesta','eliminarCarta','consultarCarta','cargarDocumento','upload','adjuntosRespuesta','eliminarAdjunto'),
 				'users'=>array('@'),
 			),
 			array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -60,23 +60,25 @@ class ActividadesController extends Controller
 	 * Creates a new model.
 	 * If creation is successful, the browser will be redirected to the 'view' page.
 	 */
-	public function actionCreate()
-	{
-		$model=new Actividades;
+	public function actionCreate(){
 
-		// Uncomment the following line if AJAX validation is needed
-		// $this->performAjaxValidation($model);
+		if(Yii::App()->request->isAjaxRequest){
+			$model=new Actividades;
 
-		if(isset($_POST['Actividades']))
-		{
-			$model->attributes=$_POST['Actividades'];
-			if($model->save())
-				$this->redirect(array('view','id'=>$model->id));
+			if(isset($_POST['Actividades'])){
+				$model->attributes = $_POST['Actividades'];
+				
+	            if($model->validate()){
+	            	$model->save();
+	                echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('create', array('model' => $model), true, true)));
+				}else{
+					echo CJSON::encode(array('status'=>'error', 'content' => $this->renderPartial('create', array('model' => $model), true, true)));
+				}
+				exit;
+			}else{
+				echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('create', array('model' => $model), true, true)));
+			}
 		}
-
-		$this->render('create',array(
-			'model'=>$model,
-		));
 	}
 
 	/**
@@ -145,29 +147,26 @@ class ActividadesController extends Controller
 	}
 	public function actionIndex()
 	{
-		$fisico = new CartasFisicas;
-		$mail = new CartasMail;
-		$telefono = new TelefonosCartas;
-		$adjuntos = new AdjuntosRecepcion;
 		$aux = "";
 		if($_POST["id_trazabilidad"]){
 			$id_trazabilidad = $_POST["id_trazabilidad"];
-			$flujo = Trazabilidad::model()->findByAttributes(array("id"=>$id_trazabilidad));	
+			$traza = Trazabilidad::model()->findByPk($id_trazabilidad);
 		}
-		if($flujo){
-			$actividad = Flujo::model()->findByAttributes(array("id"=>$flujo->actividad));
-			switch($actividad->actividad){
+		if($traza){
+			$actividad = ActividadTipologia::model()->findByAttributes(array("id"=>$traza->actividad));
+			switch($actividad->id_actividad){
 				case "3":
-					$model = new Cartas;
-					$recepcion = Recepcion::model()->informacionRecepcion($flujo->na);
-					$empresa = EmpresaPersona::model()->informacionEmpresa($recepcion->documento);
-					$consulta = Cartas::model()->findAllByAttributes(array("na"=>$flujo->na));
-					$rows = count($consulta);
-					$model->trazabilidad = $id_trazabilidad;
-					$model->na = $flujo->na;
-					$model->nombre_destinatario = ucwords(strtolower($empresa->razon));
-					$tipologia = $recepcion->tipologia;
-					echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('generacionRespuesta', array('model' => $model,'fisico'=>$fisico,'mail'=>$mail,'telefono'=>$telefono,'adjuntos'=>$adjuntos,'rows'=>$rows,'tipologia'=>$tipologia), true, true)));
+					$model = new CartaPlantilla;
+					$model->id_traza = $traza->id;
+					$recepcion = Recepcion::model()->findByPk($traza->na);
+					$modelPrincipal = Cartas::model()->findByAttributes(array("na"=>$recepcion->na, "id_trazabilidad"=>$traza->id, "principal"=>"Si"));
+					if ($modelPrincipal){
+						$model->texto = $modelPrincipal->carta;
+						$model->carta = $modelPrincipal->carta;
+						$model->plantilla = $modelPrincipal->id_plantilla;
+					}
+
+					echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('_generaRespuesta', array('model'=>$model, 'recepcion'=>$recepcion, 'id_traza'=>$traza->id), true, true)));
 				break;
 				default:
 					$model = new ObservacionesTrazabilidad;
@@ -183,14 +182,22 @@ class ActividadesController extends Controller
 			$model->attributes = $_POST['ObservacionesTrazabilidad'];
 			$model->usuario = Yii::app()->user->usuario;
 			if($model->save()){
-				$trazabilidad = Trazabilidad::model()->findByAttributes(array("id"=>$model->id_trazabilidad));
-				$actividad = Actividades::model()->cierraActividad($trazabilidad->na,$trazabilidad->actividad);
-				$abrir_actividad = Actividades::model()->abrirActividad($trazabilidad->na,$trazabilidad->actividad);
-				if($abrir_actividad){
-					$aux = true;
+				$trazabilidad = Trazabilidad::model()->findByPk($model->id_trazabilidad);
+				if($trazabilidad){
+					$actividad = Actividades::model()->cierraActividad($trazabilidad->id);
+					if($actividad){
+						$abrir_actividad = Actividades::model()->abrirActividad($trazabilidad->na,$actividad,$trazabilidad->id);
+						if($abrir_actividad){
+							$aux = true;
+						}else{
+							$aux = false;
+						}
+					}else{
+						$aux = false;	
+					}
 				}else{
 					$aux = false;
-				}
+				}				
 			}else{
 				$aux = false;
 			}
@@ -200,79 +207,48 @@ class ActividadesController extends Controller
 				echo CJSON::encode(array('status'=>'error', 'content' => $this->renderPartial('index', array('model' => $model), true, true)));
 			}
 		}
-		if(isset($_POST['Cartas'])){
-			$model = new Cartas;
-			$model->attributes = $_POST['Cartas'];
-			$telefono->attributes = $_POST['TelefonosCartas'];
-			$adjuntos->attributes = $_POST['AdjuntosRecepcion'];
-			$adjuntos->archivo = CUploadedFile::getInstance($adjuntos,'archivo');
-			$rows = $_POST['rows'];
-			$tipologia = $_POST['tipologia'];
-			$model->carta = $_POST['Cartas']['area_carta'];
-			$model->area_carta = $model->carta;
-			$model->principal = "Si";
-			if($model->validate()){
-				if($model->entrega == "1"){
-					$mail->attributes = $_POST['CartasMail'];
-					if($mail->validate()){
-						$model->save();
-						$guarda_mail = CartasMail::model()->guardaMail($mail->mail, $model->id);
-						if(!empty($adjuntos->archivo)){
-							$adjuntos->na = $model->na;
-							$path = "http://".$_SERVER['HTTP_HOST']."/img04/arp/".date("Ymd")."/".$adjuntos->na;
-							$extension = strtolower(".".$adjuntos->archivo->extensionName);
-							$nombre = "ADJ".Yii::app()->db->createCommand("SELECT nextval('concecutivos_adjuntos_seq')")->queryScalar();
-							$adjuntos->path = $path."/".$nombre.$extension;
-							if($adjuntos->save()){
-								$path = str_replace("http://".$_SERVER['HTTP_HOST'],"/vol2",$path);
-								if(!is_dir($path)){
-									exec("mkdir -p $path; sudo chmod 775 -R $path", $output, $return_var);
-								}
-								$adjuntos->archivo->saveAs($path."/".$nombre.$extension);
-							}
-						}	
-						$trazabilidad = Trazabilidad::model()->findByAttributes(array("id"=>$model->trazabilidad));
-						$actividad = Actividades::model()->cierraActividad($trazabilidad->na,$trazabilidad->actividad);
-						$abrir_actividad = Actividades::model()->abrirActividad($trazabilidad->na,$trazabilidad->actividad);
-						$aux = true;
-					}else{
-						$aux = false;
-					}
-				}elseif($model->entrega == "2"){
-					$fisico->attributes = $_POST['CartasFisicas'];
-					if($fisico->validate()){
-						$model->save();
-						$guarda_fisico = CartasFisicas::model()->guardaFisico($model->id,$fisico->firma,$fisico->direccion,$fisico->ciudad);
-						if(!empty($telefono->attributes)){
-							$guarda_telefono = TelefonosCartas::model()->guardaTelefono($model->id, $telefono->telefono);
-						}
-						$guarda_mail = CartasMail::model()->guardaMail($mail->mail, $model->id);
-						$trazabilidad = Trazabilidad::model()->findByAttributes(array("id"=>$model->trazabilidad));
-						$actividad = Actividades::model()->cierraActividad($trazabilidad->na,$trazabilidad->actividad);
-						$abrir_actividad = Actividades::model()->abrirActividad($trazabilidad->na,$trazabilidad->actividad);
-						$aux = true;
-					}else{
-						$aux = false;
-					}
-				}				
+		if(isset($_POST['CartaPlantilla'])){
+			$model = new CartaPlantilla;
+			$model->attributes = $_POST['CartaPlantilla'];
+			$model->texto = $model->carta;
+			$traza = Trazabilidad::model()->findByPk($model->id_traza);
+			$recepcion = Recepcion::model()->findByPk($traza->na);
+			
+			if( $model->validate() && $model->validaRespuestas() ){
+				//Actualizar cartas
+				$update = Cartas::model()->actualizaCartas($traza->id, $model->carta);
+				//Eviar Respuestas Cartas				
+				$envio = Cartas::model()->clasificacionCarta($traza->id);
+
+				$actividad = Actividades::model()->cierraActividad($traza->id);
+				if($actividad){
+		            $abrir_actividad = Actividades::model()->abrirActividad($traza->na, $actividad, $traza->id);
+		            if($abrir_actividad){
+		                $aux = true;
+		            }else{
+		                $aux = false;
+		            }
+			    }else{
+			        $aux = false;
+			    }
+				
+			    if($aux){
+					echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('_generaRespuesta', array('model'=>$model, 'recepcion'=>$recepcion, 'id_traza'=>$traza->id), true, true)));
+				}else{
+					echo CJSON::encode(array('status'=>'error', 'content' => $this->renderPartial('_generaRespuesta', array('model'=>$model, 'recepcion'=>$recepcion, 'id_traza'=>$traza->id), true, true)));
+				}
 			}else{
-				$aux = false;
-			}
-			if($aux){
-				$actualizaCarta = Cartas::actualizaCarta($model->na, $model->carta);
-				$clasificacion = Cartas::clasificacionCarta($model->na);
-				echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('generacionRespuesta', array('model' => $model,'fisico'=>$fisico,'mail'=>$mail,'telefono'=>$telefono,'adjuntos'=>$adjuntos,'rows'=>$rows,'tipologia'=>$tipologia), true, true)));
-			}else{
-				echo CJSON::encode(array('status'=>'error', 'content' => $this->renderPartial('generacionRespuesta', array('model' => $model,'fisico'=>$fisico,'mail'=>$mail,'telefono'=>$telefono,'adjuntos'=>$adjuntos,'rows'=>$rows,'tipologia'=>$tipologia), true, true)));
+				echo CJSON::encode(array('status'=>'error', 'content' => $this->renderPartial('_generaRespuesta', array('model'=>$model, 'recepcion'=>$recepcion, 'id_traza'=>$traza->id), true, true)));
 			}
 		}
 	}
 	public function actionAdmin()
 	{
-		$model=new Actividades('search');
+		$model = new Actividades('search');
 		$model->unsetAttributes();  // clear any default values
-		if(isset($_GET['Actividades']))
-			$model->attributes=$_GET['Actividades'];
+
+		if(isset($_POST['Actividades']))
+			$model->attributes=$_POST['Actividades'];
 
 		$this->render('admin',array(
 			'model'=>$model,
@@ -389,4 +365,156 @@ class ActividadesController extends Controller
 			echo CJSON::encode(array('status'=>'error', 'content' => $this->renderPartial('copias', array('model' => $model,'fisico'=>$fisico,'mail'=>$mail,'telefono'=>$telefono), true, true)));
 		}
 	}
+	public function actionEditar(){
+		if(Yii::App()->request->isAjaxRequest){
+			if(isset($_POST['Actividades'])){
+				$model = Actividades::model()->findByPk($_POST['Actividades']['id']);
+				$model->attributes = $_POST['Actividades'];
+				
+	            if($model->validate()){
+	            	$model->save();
+	                echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('_editaActividad', array('model' => $model), true, true)));
+				}else{
+					echo CJSON::encode(array('status'=>'error', 'content' => $this->renderPartial('_editaActividad', array('model' => $model), true, true)));
+				}
+				exit;
+			}else{
+				$id = $_POST["id"];
+				if(!empty($id) ){
+					$model = $this->loadModel($id);
+					
+					if($model){
+						//echo CJSON::encode(array('status'=>'success', 'content' => "OK", true, true));
+						echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('_editaActividad', array('model' => $model), true, true)));
+					}else{
+						echo CJSON::encode(array('status'=>'error', 'content' => "No se logró cargar información de la actividad.", true, true));
+					}				
+				}else{
+					echo CJSON::encode(array('status'=>'error', 'content' => "No se encontró actividad.", true, true));
+				}
+			}
+		}
+	}
+	public function actionConsultaEmail(){
+		if(Yii::App()->request->isAjaxRequest){
+			if($_POST["na"]){
+				$na = $_POST["na"];
+				$mail = MailRecepcion::getMail($na);
+				if($mail){
+					die($mail);
+				}else{
+					die;
+				}
+			}
+		}
+	}
+	public function actionCartasRespuesta(){
+   		if(Yii::App()->request->isAjaxRequest){
+   			$na = $_POST['na'];
+   			$id_traza = $_POST['id_traza'];
+
+   			$total = Cartas::model()->countByAttributes(array("na"=>$na, "id_trazabilidad"=>$id_traza));
+   			if($total > 0){
+				$modelCartas = new Cartas('search');
+				$modelCartas->unsetAttributes();
+   				$modelCartas->na = $na;
+   				$modelCartas->id_trazabilidad = $id_traza;
+
+   				echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('_cartasRespuesta', array('modelCartas' => $modelCartas), true, true)));
+   			}else{
+				echo CJSON::encode(array('status'=>'error'));
+   			}
+   		}
+   	}
+   	public function actionEliminarCarta(){
+        if(Yii::App()->request->isAjaxRequest){
+            if($_POST["id"]){
+                $id = $_POST["id"];
+                $model=Cartas::model()->findByPk($id);
+                if($model->delete()){
+                   	echo CJSON::encode(array('status'=>'success'));
+                }else{
+                    echo CJSON::encode(array('status'=>'error'));
+                }
+            }
+        }
+    }
+    public function actionCargarDocumento(){
+		$aux = true;
+		$model = new AdjuntosRespuesta;
+		if(!empty($_POST["id_trazabilidad"])){
+			$model->id_trazabilidad = $_POST["id_trazabilidad"];
+		}
+		if(isset($_POST['AdjuntosRespuesta'])){
+			$model->attributes = $_POST['AdjuntosRespuesta'];
+			$model->path_web = str_replace("/vol2", "http://".$_SERVER['HTTP_HOST'], $model->archivo);
+			$model->path_fisico = $model->archivo;
+
+			if(!$model->save()){
+				$aux = false;
+			}
+		}
+		if($aux){
+			echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('_adjuntosRespuesta', array('model' => $model), true, true)));
+		}else{
+			echo CJSON::encode(array('status'=>'error', 'content' => $this->renderPartial('_adjuntosRespuesta', array('model' => $model), true, true)));
+		}
+		Yii::app()->end();
+    }
+    public function actionUpload()
+    {
+        $tempFolder = DIRECTORY_SEPARATOR."vol2".
+        			  DIRECTORY_SEPARATOR."img04".
+        			  DIRECTORY_SEPARATOR."archivos_tmp".
+        			  DIRECTORY_SEPARATOR.Yii::app()->user->name.
+        			  DIRECTORY_SEPARATOR.date('Y-m-d').
+        			  DIRECTORY_SEPARATOR.date('H-i-s');
+        @mkdir($tempFolder, 0777, TRUE);
+	    //@mkdir($tempFolder.'chunks', 0777, TRUE);
+	    Yii::import("ext.EFineUploader.qqFileUploader");
+	    $uploader = new qqFileUploader();
+	    $uploader->allowedExtensions = array('jpg','jpeg','png','pdf','xls','csv','msg','tif','xlsx','msg');
+	    $uploader->sizeLimit = 2 * 1024 * 1024;//maximum file size in bytes
+	    $uploader->chunksFolder = $tempFolder.'chunks';
+
+	    $result = $uploader->handleUpload($tempFolder);
+	    $result['archivo'] = $uploader->getUploadName();
+	    $result['ruta'] = $tempFolder."/".$result['archivo'];
+
+
+	    $uploadedFile=$tempFolder.$result['archivo'];
+
+	    header("Content-Type: text/plain");
+	    $result=htmlspecialchars(json_encode($result), ENT_NOQUOTES);
+	    echo $result;
+	    Yii::app()->end();
+    }
+    public function actionAdjuntosRespuesta(){
+   		if(Yii::App()->request->isAjaxRequest){
+   			$id_trazabilidad = $_POST['id_trazabilidad'];
+   			$total = AdjuntosRespuesta::model()->countByAttributes(array("id_trazabilidad"=>$id_trazabilidad));
+
+   			if($total > 0){
+				$modelAdjuntos = new AdjuntosRespuesta('search');
+   				$modelAdjuntos->id_trazabilidad = $id_trazabilidad;
+
+   				echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('_listaAdjuntos', array('modelAdjuntos' => $modelAdjuntos), true, true)));
+   			}else{
+				echo CJSON::encode(array('status'=>'error'));
+   			}
+   		}
+   	}
+   	public function actionEliminarAdjunto(){
+        if(Yii::App()->request->isAjaxRequest){
+            if($_POST["id"]){
+                $id = $_POST["id"];
+                $model = AdjuntosRespuesta::model()->findByPk($id);
+                if($model->delete()){
+                   	echo CJSON::encode(array('status'=>'success'));
+                }else{
+                    echo CJSON::encode(array('status'=>'error'));
+                }
+            }
+        }
+    }
 }

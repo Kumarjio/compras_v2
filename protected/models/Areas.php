@@ -99,4 +99,10 @@ class Areas extends CActiveRecord
 	 	$areas = CHtml::listData(Areas::model()->findAll(array('order' => 'area')),'id','area');
 	 	return $areas;
 	}
+	public static function nombreArea($tipologia)
+	{
+		$tipologia = base64_decode($tipologia);	
+		$model=Tipologias::model()->findByPk($tipologia);
+		return ucwords(strtolower($model->area0->area));
+	}
 }

@@ -32,7 +32,7 @@ class PlantillasCartasController extends Controller
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('create','update','admin','inhabilitar'),
+				'actions'=>array('create','update','admin','inhabilitar','habilitar','validarUpdate'),
 				'users'=>array('@'),
 			),
 			array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -179,6 +179,9 @@ class PlantillasCartasController extends Controller
 	{
 		$model=new PlantillasCartas('search_detalle');
 		$model->unsetAttributes();  // clear any default values
+		if(isset($_POST['PlantillasCartas']))
+			$model->attributes=$_POST['PlantillasCartas'];
+
 		$this->render('admin',array(
 			'model'=>$model,
 		));
@@ -220,6 +223,29 @@ class PlantillasCartasController extends Controller
 			die("<h5 align='center'>Plantilla Inhabilitada.</h5>");
 		}else{
 			die;
+		}
+	}
+	public function actionHabilitar()
+	{
+		$id = $_POST['id'];
+		$model = PlantillasCartas::model()->findByPk($id);
+		$model->activa = true;
+		if($model->save()){
+			die("<h5 align='center'>Plantilla Habilitada.</h5>");
+		}else{
+			die;
+		}
+	}
+	public function ActionValidarUpdate()
+	{
+		if(Yii::App()->request->isAjaxRequest){
+			$id = $_POST["id"];
+			$model=$this->loadModel($id);
+			if($model->activa){
+				echo CJSON::encode(array('status'=>'success'));
+			}else{
+				echo CJSON::encode(array('status'=>'error', 'content' => "<h5 align='center' class='red'>No se puede modificar la plantilla porque se encuentra inhabilitada.</h5>"));
+			}
 		}
 	}
 }

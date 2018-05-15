@@ -1,0 +1,77 @@
+<?php $this->beginWidget('booster.widgets.TbModal', array('id'=>'modalProductos')); ?>
+
+<?php 
+$criteria = new CDbCriteria;
+if($productos->id_categoria != "")
+	$criteria->compare('id_categoria',$productos->id_categoria);
+$criteria->order = 'nombre';
+?>
+
+  <div class="modal-header">
+		      <a class="close" data-dismiss="modal">&times;</a>
+      <h3>Seleccionar productos</h3> 
+  </div>
+
+  <div id="modal-content" class="modal-body">
+
+ <?php
+
+	 $this->widget('booster.widgets.TbGridView',array(
+    'id'=>'productos-om-grid',
+    'dataProvider'=>$productos->search_presupuesto(),
+    //'template' => "{items}",
+    'filter' => $productos,
+    'type' => 'striped bordered condensed',
+    'responsiveTable' => true,
+    'columns'=>array(
+        //'id_categoria',
+        //'categoria',
+        array(
+          	'name'=>'id_categoria',
+          	'filter'=>CHtml::activeDropDownList($productos, 'id_categoria', CHtml::listData(Categorias::model()->findAll(), 'id', 'nombre'), array('class'=>'form-control', 'prompt'=>''
+         	)),
+         	'value'=>'$data->familia->idCategoria->nombre'
+
+        ),
+        array(
+          'name'=>'id_familia',
+          'header'=>'SubCategoria',
+          'filter'=>CHtml::activeDropDownList($productos, 'id_familia', CHtml::listData(FamiliaProducto::model()->findAll($criteria), 'id', 'nombre'), array('class'=>'form-control', 'prompt'=>'')),
+          'value'=>'$data->familia->nombre'
+        ),
+        'nombre',
+        
+        array(
+	        'header'=>'Agregar',
+	        'class'=>'booster.widgets.TbButtonColumn',
+	        'template'=>'{gestion} ',
+	        'buttons' => array(
+	          	'gestion' => array(
+	              	'label'=>'Seleccionar',
+	              	//'url'=>'CJSON::encode($data)',
+	              	'url'=>'$data->id',
+	              	//'icon'=>'glyphicon glyphicon-ok',
+	              	'imageUrl'=>Yii::app()->request->baseUrl.'/images/ok4.png',
+	              	//'visible' => '$data->estado == 1 && $data->user_asign == Yii::app()->user->usuario',
+	              	//'click'=> 'function(){observaciones($(this).parent().parent().children(":nth-child(5)").text());}',
+	              	'click'=> 'js:function(){return agregarProductoOM(this);}',
+	          	),
+	        )
+      	),  
+    ),
+  )); 
+
+?>
+  </div>
+  <div class="modal-footer">
+		      <?php $this->widget('bootstrap.widgets.BootButton', array(
+  'label'=>'Cerrar',
+		      'url'=>'#',
+		      'htmlOptions'=>array('data-dismiss'=>'modal', 'id' => "cerrar_modal", 
+		      	//'onClick' => 'resetGridView("centro-costos-grid"); $("#myModal").modal("hide");$("#crearCostosModal").modal();'
+		      ),
+	      	)); ?>
+  </div>
+
+
+	    <?php $this->endWidget(); ?>

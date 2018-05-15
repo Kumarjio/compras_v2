@@ -1,0 +1,17 @@
+--- protected/views/documentoProveedor/poliza.php
++++ protected/views/documentoProveedor/poliza.php
+@@ -62,13 +62,8 @@
+ 			<?php echo $form->dropDownList($model,
+ 						 'id_tipo_poliza',
+ 						 CHtml::listData(TipoPoliza::model()->findAll(),"id_tipo_poliza","tipo_poliza"),
+-						 array('prompt' => 'Seleccione...',
+-							   'class'=>'span5', 'multiple' => 'multiple'));
++						 array('class'=>'form-control', 'multiple' => 'multiple'));
+ ?>
+-                        <?php echo CHtml::dropDownList('DocumentoProveedor[id_tipo_poliza[]]', 
+-                                                $model, 
+-						CHtml::listData(TipoPoliza::model()->findAll(),"id_tipo_poliza","tipo_poliza"),
+-                                                array('prompt'=> 'Please Select', 'multiple' => 'multiple','class'=>'span5')); ?>
+ 		<div class="form-actions">
+ 		<?php $this->widget('bootstrap.widgets.BootButton', array(
+ 			'buttonType'=>'submit',

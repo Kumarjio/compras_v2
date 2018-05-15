@@ -1,31 +1,32 @@
 <?php
-
 /**
  * This is the model class for table "recepcion".
  *
  * The followings are the available columns in table 'recepcion':
- * @property integer $na
+ * @property string $na
  * @property string $documento
  * @property integer $tipologia
- * @property integer $ciudad
+ * @property string $ciudad
  * @property integer $tipo_documento
  * @property string $user_recepcion
  * @property string $fecha_recepcion
  * @property integer $fecha_entrega
  * @property string $hora_entrega
- * @property integer $punteo_cor
- * @property integer $impreso
+ * @property string $fecha_cliente
+ * @property string $fecha_interna
  *
  * The followings are the available model relations:
- * @property Ciudades $ciudad0
+ * @property ObservacionRecepcion $observacionRecepcion
+ * @property ObservacionesTrazabilidad[] $observacionesTrazabilidads
+ * @property SucursalRecepcion $sucursalRecepcion
+ * @property Trazabilidad[] $trazabilidads
  * @property Tipologias $tipologia0
  * @property TipoDocumento $tipoDocumento
- * @property SucursalRecepcion $sucursalRecepcion
- * @property ObservacionRecepcion $observacionRecepcion
- * @property AdjuntosRecepcion[] $adjuntosRecepcions
- * @property Trazabilidad[] $trazabilidads
+ * @property Usuario $userRecepcion
+ * @property Ciudad $ciudad0
+ * @property AdjuntosTrazabilidad[] $adjuntosTrazabilidads
+ * @property MailRecepcion[] $mailRecepcions
  * @property Cartas[] $cartases
- * @property ObservacionesTrazabilidad[] $observacionesTrazabilidads
  */
 class Recepcion extends CActiveRecord
 {
@@ -41,40 +42,51 @@ class Recepcion extends CActiveRecord
 	 * @return array validation rules for model attributes.
 	 */
 	public $area;
+	public $departamento;
 	public function rules()
 	{
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('documento, area, tipologia, ciudad, tipo_documento, fecha_entrega, hora_entrega', 'required'),
-			array('na, tipologia, area, ciudad, tipo_documento, fecha_entrega, punteo_cor, impreso', 'numerical', 'integerOnly'=>true),
+			array('documento, area, tipologia, ciudad, tipo_documento, fecha_entrega, fecha_interna, fecha_cliente, hora_entrega, departamento', 'required'),
+			array('na, documento, tipologia, area, ciudad, tipo_documento, fecha_entrega, departamento', 'numerical', 'integerOnly'=>true),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('user_recepcion','safe'),
-			//array('tipo_documento','validarCampos'),
-			array('na, documento, tipologia, ciudad, tipo_documento, user_recepcion, fecha_recepcion, fecha_entrega, hora_entrega, punteo_cor, impreso', 'safe', 'on'=>'search'),
+			array('na, user_recepcion, fecha_entrega, fecha_cliente, fecha_interna, departamento','safe'),
+			array('tipo_documento','validarTipoDoc'),
+			array('area','validarArea'),
+			array('tipologia','validarTipologia'),
+			array('ciudad','validarCiudad'),
+			array('hora_entrega','validarHora'),
+			array('fecha_entrega','validarFecha'),			
+			array('na, documento, tipologia, ciudad, tipo_documento, user_recepcion, fecha_recepcion, fecha_entrega, hora_entrega, fecha_cliente, fecha_interna, departamento', 'safe', 'on'=>'search'),
+			array('documento','validarDocumento'),
 		);
 	}
 
 	/**
 	 * @return array relational rules.
 	 */
-	public function relations()
-	{
-		// NOTE: you may need to adjust the relation name and the related
-		// class name for the relations automatically generated below.
-		return array(
-            'ciudad0' => array(self::BELONGS_TO, 'Ciudades', 'ciudad'),
+    public function relations()
+    {
+        // NOTE: you may need to adjust the relation name and the related
+        // class name for the relations automatically generated below.
+        return array(
+            'observacionRecepcion' => array(self::HAS_ONE, 'ObservacionRecepcion', 'na'),
+            'observacionesTrazabilidads' => array(self::HAS_MANY, 'ObservacionesTrazabilidad', 'na'),
+            'sucursalRecepcion' => array(self::HAS_ONE, 'SucursalRecepcion', 'na'),
+            'adjuntosRecepcions' => array(self::HAS_MANY, 'AdjuntosRecepcion', 'na'),
+            'ciudad0' => array(self::BELONGS_TO, 'Ciudad', 'ciudad'),
             'tipologia0' => array(self::BELONGS_TO, 'Tipologias', 'tipologia'),
             'tipoDocumento' => array(self::BELONGS_TO, 'TipoDocumento', 'tipo_documento'),
-            'sucursalRecepcion' => array(self::HAS_ONE, 'SucursalRecepcion', 'na'),
-            'observacionRecepcion' => array(self::HAS_ONE, 'ObservacionRecepcion', 'na'),
-            'adjuntosRecepcions' => array(self::HAS_MANY, 'AdjuntosRecepcion', 'na'),
+            'userRecepcion' => array(self::BELONGS_TO, 'Usuario', 'user_recepcion'),
             'trazabilidads' => array(self::HAS_MANY, 'Trazabilidad', 'na'),
             'cartases' => array(self::HAS_MANY, 'Cartas', 'na'),
-            'observacionesTrazabilidads' => array(self::HAS_MANY, 'ObservacionesTrazabilidad', 'na'),
-		);
-	}
+            'adjuntosTrazabilidads' => array(self::HAS_MANY, 'AdjuntosTrazabilidad', 'na'),
+            'mailRecepcions' => array(self::HAS_MANY, 'MailRecepcion', 'na'),
+        );
+
+    }
 
 	/**
 	 * @return array customized attribute labels (name=>label)
@@ -84,16 +96,19 @@ class Recepcion extends CActiveRecord
 		return array(
 			'na' => 'Na',
 			'documento' => 'Documento',
-			'tipologia' => 'Tipologia',
+			'tipologia' => 'Tipología',
 			'ciudad' => 'Ciudad',
 			'tipo_documento' => 'Tipo Documento',
 			'user_recepcion' => 'User Recepcion',
 			'fecha_recepcion' => 'Fecha Recepcion',
 			'fecha_entrega' => 'Fecha Entrega',
 			'hora_entrega' => 'Hora Entrega',
-			'punteo_cor' => 'Punteo Cor',
-			'impreso' => 'Impreso',
-			'label' => 'Label',
+			//'punteo_cor' => 'Punteo Cor',
+			//'impreso' => 'Impreso',
+			'area' => 'Área',
+			'fecha_cliente' => 'Fecha Cliente',
+			'fecha_interna' => 'Fecha Interna',
+			'departamento'=>'Departamento',
 		);
 	}
 
@@ -124,8 +139,10 @@ class Recepcion extends CActiveRecord
 		$criteria->compare('fecha_recepcion',$this->fecha_recepcion,true);
 		$criteria->compare('fecha_entrega',$this->fecha_entrega);
 		$criteria->compare('hora_entrega',$this->hora_entrega,true);
-		$criteria->compare('punteo_cor',$this->punteo_cor);
-		$criteria->compare('impreso',$this->impreso);
+		$criteria->compare('fecha_cliente',$this->fecha_cliente,true);
+		$criteria->compare('fecha_interna',$this->fecha_interna,true);
+		//$criteria->compare('punteo_cor',$this->punteo_cor);
+		//$criteria->compare('impreso',$this->impreso);
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
@@ -155,9 +172,134 @@ class Recepcion extends CActiveRecord
 	    	}
    		}
 	}*/
+
+	public function validarTipoDoc(){
+		$tipoDoc = TipoDocumento::model()->findByPk($this->tipo_documento);
+		if(!$tipoDoc){
+			$this->addError("tipo_documento", $this->getAttributeLabel('tipo_documento')." no existe.");
+		}
+
+	}
+	public function validarArea(){
+		$valArea = Areas::model()->findByPk($this->area);
+		if(!$valArea){
+			$this->addError("area", $this->getAttributeLabel('area')." no existe.");
+		}
+	}
+
+	public function validarTipologia(){
+		$valTipologia = Tipologias::model()->findByPk($this->tipologia);
+		if(!$valTipologia){
+			$this->addError("tipologia", $this->getAttributeLabel('tipologia')." no existe.");
+		}else{
+			if(!$valTipologia->activa){
+				$this->addError("tipologia", $this->getAttributeLabel('tipologia')." inactiva.");
+			}elseif(!$valTipologia->operacion){
+				$this->addError("tipologia", $this->getAttributeLabel('tipologia')." sin flujo.");
+			}elseif($valTipologia->area != $this->area){
+				$this->addError("tipologia", $this->getAttributeLabel('tipologia')." no pertenece a la ".$this->getAttributeLabel('area'));
+			}
+		}
+	}
+
+	public function validarCiudad(){
+		$valCuidad = Ciudad::model()->findByPk($this->ciudad);
+		if(!$valCuidad){
+			$this->addError("ciudad", $this->getAttributeLabel('ciudad')." no existe.");
+		}
+	}
+	public function validarHora(){
+		if(strlen($this->hora_entrega) == 5){
+			$hora = substr($this->hora_entrega, 0, 2);
+			$min = substr($this->hora_entrega, 3, 2);
+			if (is_numeric($hora) && is_numeric($min)){
+				if(($hora < 1) && ($hora > 23)){
+					$this->addError("hora_entrega", $this->getAttributeLabel('hora_entrega')." inválida.");
+				}else{
+					if(($min < 0) && ($min > 59)){
+						$this->addError("hora_entrega", $this->getAttributeLabel('hora_entrega')." inválida.");
+					}
+				}
+			}else{
+				$this->addError("hora_entrega", $this->getAttributeLabel('hora_entrega')." inválida.");
+			}
+		}else{
+			$this->addError("hora_entrega", $this->getAttributeLabel('hora_entrega')." inválida.");
+		}
+	}
+	public function validarFecha(){
+		if(strlen($this->fecha_entrega) == 8){
+			$ano = substr($this->fecha_entrega, 0, 4);
+			$mes = substr($this->fecha_entrega, 4, 2);
+			$dia = substr($this->fecha_entrega, 6, 2);
+
+			if (is_numeric($ano) && is_numeric($mes) && is_numeric($dia)){
+				if(!checkdate($mes, $dia, $ano)){
+					$this->addError("fecha_entrega", $this->getAttributeLabel('fecha_entrega')." invalida.");
+		   		}
+		   	}else{
+		   		$this->addError("fecha_entrega", $this->getAttributeLabel('fecha_entrega')." invalida.");
+		   	}
+		}
+	}
 	public function informacionRecepcion($na)
 	{
 		$recepcion = Recepcion::model()->findByAttributes(array("na"=>$na));
 		return $recepcion;
+	}
+	public static function iniciaRecepcion($na, $tipologia){
+		$trazabilidad = new Trazabilidad;
+		//$tipologia = Tipologias::model()->getTipologia($na);	
+		//$flujo = Flujo::model()->findByAttributes(array("tipologia"=>$tipologia),array('order'=>'id'));
+		$flujo = ActividadTipologia::model()->findByAttributes(array("id_tipologia"=>$tipologia,"id_actividad"=>"1"),array('order'=>'id'));
+		$trazabilidad->na = $na;
+		$trazabilidad->user_asign = Yii::app()->user->usuario;
+		$trazabilidad->estado = "1";
+		$trazabilidad->actividad = $flujo->id;
+		if($trazabilidad->save()){
+			return $trazabilidad->id;
+		}else{
+			return false;
+		}
+	}
+	public static function fechaCliente($tipologia){
+		if(!empty($tipologia)){
+			$dias = Tipologias::traerTiempo($tipologia);
+			for($i = 1; $i <= $dias; $i++){
+				$fecha_consulta = date('Ymd', strtotime('+'.$i.' days', strtotime(date('Ymd'))));
+				if(Festivos::traerDiaFestivo($fecha_consulta)){
+					$dias++;
+				}
+			}
+			$fecha_cliente = date('Y/m/d', strtotime($fecha_consulta));
+		}
+		if(empty($fecha_cliente)){
+			$fecha_cliente = date('Y/m/d');
+		}
+		return $fecha_cliente;
+	}
+	public static function fechaInterna($tipologia){
+		$contador = 0;
+		if(!empty($tipologia)){
+			foreach (Actividades::traerActividades($tipologia) as $actividad) {
+				$dias = $actividad->tiempo + $dias;
+			}
+			for($i = 1; $i <= $dias; $i++){
+				$fecha_consulta = date('Ymd', strtotime('+'.$i.' days', strtotime(date('Ymd'))));
+				if(Festivos::traerDiaFestivo($fecha_consulta)){
+					$dias++;
+				}
+			}
+			$fecha_interna = date('Y/m/d', strtotime($fecha_consulta));
+		}
+		if(empty($fecha_interna)){
+			$fecha_interna = date('Y/m/d');
+		}
+		return $fecha_interna;
+	}
+	public function validarDocumento(){
+		if($this->documento == "0"){
+			$this->addError("documento", $this->getAttributeLabel('documento')." No pueden ser 0.");
+		}
 	}
 }

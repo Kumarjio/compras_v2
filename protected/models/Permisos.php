@@ -5,14 +5,22 @@
  *
  * The followings are the available columns in table 'permisos':
  * @property integer $id
- * @property string $nombre
- * @property string $action
- *
- * The followings are the available model relations:
- * @property PermisosRoles[] $permisosRoles
+ * @property integer $controllador_accion
+ * @property string $creacion
+ * @property string $actualizacion
  */
 class Permisos extends CActiveRecord
 {
+	/**
+	 * Returns the static model of the specified AR class.
+	 * @param string $className active record class name.
+	 * @return Permisos the static model class
+	 */
+	public static function model($className=__CLASS__)
+	{
+		return parent::model($className);
+	}
+	
 	/**
 	 * @return string the associated database table name
 	 */
@@ -29,10 +37,12 @@ class Permisos extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('nombre, action', 'required'),
+			array('controllador_accion', 'required'),
+			array('controllador_accion', 'numerical', 'integerOnly'=>true),
+			array('creacion, actualizacion', 'safe'),
 			// The following rule is used by search().
-			// @todo Please remove those attributes that should not be searched.
-			array('id, nombre, action', 'safe', 'on'=>'search'),
+			// Please remove those attributes that should not be searched.
+			array('id, controllador_accion, creacion, actualizacion', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -44,7 +54,6 @@ class Permisos extends CActiveRecord
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
-			'permisosRoles' => array(self::HAS_MANY, 'PermisosRoles', 'id_permiso'),
 		);
 	}
 
@@ -55,50 +64,30 @@ class Permisos extends CActiveRecord
 	{
 		return array(
 			'id' => 'ID',
-			'nombre' => 'Nombre',
-			'action' => 'Action',
+			'controllador_accion' => 'Controllador Accion',
+			'creacion' => 'Creacion',
+			'actualizacion' => 'Actualizacion',
 		);
 	}
 
 	/**
 	 * Retrieves a list of models based on the current search/filter conditions.
-	 *
-	 * Typical usecase:
-	 * - Initialize the model fields with values from filter form.
-	 * - Execute this method to get CActiveDataProvider instance which will filter
-	 * models according to data in model fields.
-	 * - Pass data provider to CGridView, CListView or any similar widget.
-	 *
-	 * @return CActiveDataProvider the data provider that can return the models
-	 * based on the search/filter conditions.
+	 * @return CActiveDataProvider the data provider that can return the models based on the search/filter conditions.
 	 */
 	public function search()
 	{
-		// @todo Please modify the following code to remove attributes that should not be searched.
+		// Warning: Please modify the following code to remove attributes that
+		// should not be searched.
 
 		$criteria=new CDbCriteria;
 
 		$criteria->compare('id',$this->id);
-		$criteria->compare('nombre',$this->nombre,true);
-		$criteria->compare('action',$this->action,true);
+		$criteria->compare('controllador_accion',$this->controllador_accion);
+		$criteria->compare('creacion',$this->creacion,true);
+		$criteria->compare('actualizacion',$this->actualizacion,true);
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
 		));
-	}
-
-	/**
-	 * Returns the static model of the specified AR class.
-	 * Please note that you should have this exact method in all your CActiveRecord descendants!
-	 * @param string $className active record class name.
-	 * @return Permisos the static model class
-	 */
-	public static function model($className=__CLASS__)
-	{
-		return parent::model($className);
-	}
-	public static function cargarPermisos()
-	{
-	 	return CHtml::listData(Permisos::model()->findAll(array('order' => 'nombre')),'id','nombre');
 	}
 }

@@ -35,6 +35,7 @@ class EmpresaPersona extends CActiveRecord
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('documento, razon, documento_identificacion', 'safe', 'on'=>'search'),
+			array('razon','validarRazon'),
 		);
 	}
 
@@ -104,5 +105,20 @@ class EmpresaPersona extends CActiveRecord
 	{
 		$empresa = EmpresaPersona::model()->findByAttributes(array("documento"=>$documento));
 		return $empresa;
+	}
+	public function validarRazon(){
+		$permitidos = "abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZáéíóúÁÉÍÓÚ0123456789 ";
+		$aux = true;
+		if($this->razon == "0"){
+			$this->addError("razon", $this->getAttributeLabel('razon')." No pueden ser 0.");
+		}
+		for ($i=0; $i<strlen($this->razon); $i++){ 
+	      if (strpos($permitidos, substr($this->razon,$i,1))===false){
+	      	$aux = false;
+	      } 
+	   	}
+	   	if(!$aux){
+	    	$this->addError("razon", $this->getAttributeLabel('razon')." no puede tener caracteres especiales.");	
+	   	}
 	}
 }

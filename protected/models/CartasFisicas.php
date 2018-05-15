@@ -28,6 +28,7 @@ class CartasFisicas extends CActiveRecord
 	/**
 	 * @return array validation rules for model attributes.
 	 */
+	public $buscar;
 	public function rules()
 	{
 		// NOTE: you should only define rules for those attributes that
@@ -35,9 +36,10 @@ class CartasFisicas extends CActiveRecord
 		return array(
 			array('firma, direccion, ciudad', 'required'),
 			array('firma', 'numerical', 'integerOnly'=>true),
+			array('buscar', 'safe'),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, id_cartas, firma, direccion, ciudad', 'safe', 'on'=>'search'),
+			array('id, id_cartas, firma, direccion, ciudad, buscar', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -66,6 +68,7 @@ class CartasFisicas extends CActiveRecord
 			'firma' => 'Firma',
 			'direccion' => 'Direccion',
 			'ciudad' => 'Ciudad',
+			'buscar'=>'Buscar',
 		);
 	}
 
@@ -94,13 +97,13 @@ class CartasFisicas extends CActiveRecord
 		$criteria->compare('ciudad',$this->ciudad,true);
 		$criteria->with = array('idCartas','idCartas.na0.tipologia0','idCartas.na0.tipologia0.area0','idCartas.na0');
 		$criteria->addCondition(array('"idCartas"."punteo" = 1', '"idCartas"."entrega" = 2' ));
-		if(!empty($_GET['destinatario'])){
+
+		if(!empty($this->buscar)){
+			$criteria->addCondition(array('CAST("idCartas"."na"AS TEXT) ilike \'%'.$this->buscar.'%\'' ));
+		}
+		/*if(!empty($_GET['destinatario'])){
 			$destinatario = $_GET['destinatario'];
 			$criteria->addCondition(array('"idCartas"."nombre_destinatario" ilike \'%'.$destinatario.'%\''));
-		}
-		if(!empty($_GET['na'])){
-			$na = $_GET['na'];
-			$criteria->addCondition(array('"idCartas"."na" = '.$na ));
 		}
 		if(!empty($_GET['principal'])){
 			$principal = $_GET['principal'];
@@ -129,7 +132,7 @@ class CartasFisicas extends CActiveRecord
 		if(!empty($_GET['hora'])){
 			$hora = $_GET['hora'];
 			$criteria->addCondition(array('"na0"."hora_entrega" ilike \'%'.$hora.'%\''));
-		}
+		}*/
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
 		));
@@ -189,7 +192,7 @@ class CartasFisicas extends CActiveRecord
     }
     public static function consultaExcel()
 	{
-		return CartasFisicas::model()->with( array('idCartas'=>array("alias"=>"c",'condition'=>'c.punteo = 2 AND c.entrega = 2')))->findAll("t.firma = :u", array(":u"=>"2"));
+		return CartasFisicas::model()->with( array('idCartas'=>array("alias"=>"c",'condition'=>'c.punteo = 2 AND c.entrega = 2 AND c.proveedor = 2')))->findAll("t.firma = :u", array(":u"=>"2"));
 	}
 	public static function actualizaPunteo($id)
 	{	

@@ -1,0 +1,68 @@
+--- protected/models/Usuario.php
++++ protected/models/Usuario.php
+@@ -80,52 +71,25 @@
+ 			'bloqueado' => 'Bloqueado',
+ 			'fecha_creacion' => 'Fecha Creacion',
+ 			'usuario_creacion' => 'Usuario Creacion',
+-			'contraseña' => ($this->getScenario() == 'cambio_pass') ? 'Contraseña Nueva' : 'Contraseña',
++			'contraseña' => 'Contraseña',
+ 			'cargo' => 'Cargo',
+ 			'area' => 'Area',
+ 			'repetir' => 'Confirmar Contraseña',
+-			'valida_contrasena'=>'Contraseña Anterior'
+ 		);
+ 	}
+ 
+-	
+-	public function tiposInhabilidad(){
+-		return array(
+-			array('id' => 1, 'nombre' => 'Vacaciones'),
+-			array('id' => 2, 'nombre' => 'Permiso o Licencia'),
+-			array('id' => 3, 'nombre' => 'Fin Contrato'),
+-		);
+-	}
+-
+-	public function tipoInabilidadSpan($tipo){
+-		if($tipo == 1 || $tipo == 2)
+-			$color = "-warning";
+-
+-		if($tipo == 3)
+-			$color = "-danger";
+-		
+-		if($tipo == 4)
+-			$color = "-success";
+-
+-		if($tipo == ""){
+-			return "";
+-		}
+-
+-		return "<br/><span class='label label".$color."''>".Usuario::model()->tiposInabilidadById($tipo)."</span>";
+-	}
+-
+-	public function tiposInabilidadById($id){
+-
+-		$arr = array_filter($this->tiposInhabilidad(), function($ar) use($id) {
+-
+-			return ($ar['id'] == $id);
+-		   //return ($ar['name'] == 'cat 1' AND $ar['id'] == '3');// you can add multiple conditions
+-		});
+-
+-
+-		$arr2 = array_pop($arr);
+-		return $arr2['nombre'];
+-	}
++	/**
++	 * Retrieves a list of models based on the current search/filter conditions.
++	 *
++	 * Typical usecase:
++	 * - Initialize the model fields with values from filter form.
++	 * - Execute this method to get CActiveDataProvider instance which will filter
++	 * models according to data in model fields.
++	 * - Pass data provider to CGridView, CListView or any similar widget.
++	 *
++	 * @return CActiveDataProvider the data provider that can return the models
++	 * based on the search/filter conditions.
++	 */
+ 	public function search()
+ 	{
+ 		// @todo Please modify the following code to remove attributes that should not be searched.

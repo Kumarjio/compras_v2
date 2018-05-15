@@ -1,13 +1,16 @@
 <?php
 //echo phpinfo();
-$na = "123";
-$path = "/vol2/img04/arp/".date("Ymd")."/".$na;
+$email_a = 'joe@example.com';
+$email_b = 'bogus';
 
-exec("mkdir -p /vol2/img04/arp/12/01/10/25 ", $resp, $salida);
-echo 'Propietario script actual: ' . get_current_user();
-print_r($resp);
-print_r($salida);
-echo "hola mundo";
-
+if (filter_var($email_a, FILTER_VALIDATE_EMAIL)) {
+    echo "Esta dirección de correo ($email_a) es válida.";
+}
+if (filter_var($email_b, FILTER_VALIDATE_EMAIL)) {
+    echo "Esta dirección de correo ($email_b) es válida.";
+}
+else {
+	 echo "Esta dirección de correo ($email_b) no es válida.";
+}
 
 ?>

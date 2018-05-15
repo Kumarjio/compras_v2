@@ -1,14 +1,24 @@
 <?php
-
 /**
  * This is the model class for table "tipologias".
  *
  * The followings are the available columns in table 'tipologias':
  * @property integer $id
  * @property string $tipologia
+ * @property integer $area
+ * @property boolean $activa
+ * @property boolean $operacion
+ * @property boolean $en_espera
+ * @property integer $tiempo_cliente
+ * @property boolean $tutela
+ * @property boolean $cargue
  *
  * The followings are the available model relations:
+ * @property ActividadTipologia[] $actividadTipologias
+ * @property Flujo[] $flujos
+ * @property PlantillaTipologia[] $plantillaTipologias
  * @property Recepcion[] $recepcions
+ * @property Areas $area0
  */
 class Tipologias extends CActiveRecord
 {
@@ -30,10 +40,11 @@ class Tipologias extends CActiveRecord
         return array(
             array('tipologia, area', 'required'),
             array('area', 'numerical', 'integerOnly'=>true),
-            array('activa', 'safe'),
+            array('activa, operacion, en_espera, tutela, cargue', 'safe'),
             // The following rule is used by search().
             // @todo Please remove those attributes that should not be searched.
-            array('id, tipologia, area, activa', 'safe', 'on'=>'search'),
+            array('id, tipologia, area, activa, operacion, en_espera, tiempo_cliente, tutela, cargue', 'safe', 'on'=>'search'),
+            array('tipologia', 'validaUnico'),
         );
     }
 
@@ -63,6 +74,10 @@ class Tipologias extends CActiveRecord
             'tipologia' => 'Tipologia',
             'area' => 'Area',
             'activa' => 'Activa',
+            'operacion' => 'Operacion',
+            'en_espera' => 'En Espera',
+            'tutela' => 'Tutela',
+            'cargue' => 'Cargue',
         );
     }
 
@@ -85,10 +100,15 @@ class Tipologias extends CActiveRecord
         $criteria=new CDbCriteria;
 
         $criteria->compare('id',$this->id);
-        $criteria->compare('tipologia',$this->tipologia,true);
+        //$criteria->compare('tipologia',$this->tipologia,true);
         $criteria->compare('area',$this->area);
-        $criteria->compare('activa',$this->activa);
-
+        //$criteria->compare('activa',1);
+        $criteria->compare('operacion',$this->operacion);
+        $criteria->compare('en_espera',$this->en_espera);
+        $criteria->compare('cargue',0);
+        if(!empty($this->tipologia)){
+			$criteria->addCondition("tipologia in (select tipologia from usuario where tipologia ilike '%".$this->tipologia."%')");
+		}
         return new CActiveDataProvider($this, array(
             'criteria'=>$criteria,
             'sort'=>array(
@@ -110,7 +130,9 @@ class Tipologias extends CActiveRecord
 
 	public static function cargaTipologias()
 	{
-	 	return CHtml::listData(Tipologias::model()->findAll(array('order' => 'tipologia','condition'=>'activa=:D','params'=>array(':D'=>'true'))),'id','tipologia');
+	 	//return CHtml::listData(Tipologias::model()->findAll(array('order' => 'tipologia','condition'=>'activa=:D','params'=>array(':D'=>'true'))),'id','tipologia');
+	 	return CHtml::listData(Tipologias::model()->findAll(array("condition"=>"activa =  true AND id <> 23 AND id <> 24",'order' => 't.tipologia')),'id',CHtml::encode('tipologia'),true);
+	 	//return CHtml::listData(Tipologias::model()->findAll('activa = :act AND operacion = :ope', array(':act'=>true, ':ope'=>true)),'id','tipologia');
 	}
 	public static function getTipologia($na)
 	{
@@ -121,5 +143,27 @@ class Tipologias extends CActiveRecord
 	{
 	 	$tipologia = Tipologias::model()->findByAttributes(array("id"=>$tipologia));
 	 	return $tipologia;
+	}
+	public static function nombreTipologia($tipologia)
+	{
+		$tipologia = base64_decode($tipologia);	
+		$model=Tipologias::model()->findByPk($tipologia);
+		return ucwords(strtolower($model->tipologia));
+	}
+	public static function traerTiempo($tipologia)
+	{
+		$model=Tipologias::model()->findByPk($tipologia);
+		return $model->tiempo_cliente;
+	}
+	public function validaUnico(){
+		$criteriaVal = new CDbCriteria;
+		$criteriaVal->addCondition("TRIM(tipologia) ILIKE '".trim($this->tipologia)."'");
+		if(!$this->isNewRecord){
+			$criteriaVal->addNotInCondition('id', array($this->id));
+		}
+		$duplicados = Tipologias::model()->findAll($criteriaVal);
+		if($duplicados){
+			$this->addError('tipologia', 'El nombre de la tipologia ya existe en el sistema.');
+		}
 	}
 }

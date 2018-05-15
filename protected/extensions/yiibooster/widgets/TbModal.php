@@ -42,6 +42,8 @@ class TbModal extends CWidget {
 	 */
 	public $htmlOptions = array();
 
+	public $large = false;
+
 	/**
 	 *### .init()
 	 *
@@ -72,7 +74,10 @@ class TbModal extends CWidget {
 			}
 		}
 		echo CHtml::openTag('div', $this->htmlOptions);
-		echo '<div class="modal-dialog"><div class="modal-content">';
+		if($this->large)
+			echo '<div class="modal-dialog modal-lg"><div class="modal-content">';	
+		else
+			echo '<div class="modal-dialog"><div class="modal-content">';
 	}
 
 	/**
@@ -93,8 +98,12 @@ class TbModal extends CWidget {
 		$cs->registerScript(__CLASS__ . '#' . $id, "jQuery('#{$id}').modal({$options});");
 
 		foreach ($this->events as $name => $handler) {
+			var_dump($name);
+			var_dump($handler);
 			$handler = CJavaScript::encode($handler);
 			$cs->registerScript(__CLASS__ . '#' . $id . '_' . $name, "jQuery('#{$id}').on('{$name}', {$handler});");
 		}
 	}
 }
+
+

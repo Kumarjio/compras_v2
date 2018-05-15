@@ -1843,15 +1843,15 @@ if (typeof NProgress != 'undefined') {
 			//('init_PNotify');
 			
 			new PNotify({
-			  title: "PNotify",
+			  /*title: "Correspondencia",
 			  type: "info",
-			  text: "Welcome. Try hovering over me. You can click things behind me, because I'm non-blocking.",
+			  text: "Bienvenido al sistema de correspondencia.",
 			  nonblock: {
 				  nonblock: true
 			  },
 			  addclass: 'dark',
 			  styling: 'bootstrap3',
-			  hide: false,
+			  hide: true,*/
 			  before_close: function(PNotify) {
 				PNotify.update({
 				  title: PNotify.options.title + " - Enjoy your Stay",
@@ -5056,7 +5056,7 @@ if (typeof NProgress != 'undefined') {
 		init_DataTables();
 		init_chart_doughnut();
 		init_gauge();
-		init_PNotify();
+		//init_PNotify();
 		init_starrr();
 		init_calendar();
 		init_compose();

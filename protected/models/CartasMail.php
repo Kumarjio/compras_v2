@@ -116,26 +116,35 @@ class CartasMail extends CActiveRecord
 		if($model->save()){
 			return true;
 		}else{
+			print_r($model->getErrors());
+			die;
 			return false;
 		}
 	}
 	public static function envioCartasMail($id,$body,$proveedor,$na)
 	{	
-		$img = '<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <img src="cid:bolivar_png" style="width:125px" /></p>';
+		$img = '<img src="cid:alfa_encabezado" align="right">';
 		$mail = CartasMail::model()->findByAttributes(array("id_cartas"=>$id));
 		$mailer = Yii::createComponent('application.extensions.mailer.EMailer');
-		$mailer->Host = $_SERVER['HTTP_HOST'];
+		//$mailer->Host = $_SERVER['HTTP_HOST'];
+		$mailer->Host = "smtp.gmail.com";
+		$mailer->Port = 587;
+		$mailer->SMTPSecure = "tls";
+		$mailer->SMTPAuth   = true;
 		$mailer->IsSMTP();
-		$mailer->From = 'daniloramirez0818@gmail.com';
+		$mailer->From = 'pruebascorrespondencia@gmail.com';
 		if($proveedor == "1"){
 			//$mailer->AddReplyTo('wei@example.com');
 		}
+		$mailer->Username   = "pruebascorrespondencia@gmail.com";
+		$mailer->Password   = "imagine2017*";
 		$mailer->AddAddress($mail->mail);
-		$mailer->FromName = 'Seguros Bolivar';
+		$mailer->FromName = 'Seguros Alfa';
+		$mailer->Priority = 1;
 		$mailer->CharSet = 'UTF-8';
 		$mailer->Subject = 'Respuesta caso: [CASO - '.$na.']';
-		$mailer->AddEmbeddedImage('/correspondencia/images/bolivar.png', "my-attach", 'bolivar_png');
-		$mailer->MsgHTML($body);
+		$mailer->AddEmbeddedImage('/var/www/html/correspondencia/images/alfa_encabezado.png', 'alfa_encabezado', 'alfa_encabezado.png');
+		$mailer->MsgHTML($img.$body);
 		$mailer->Send();
 		return true;
 	}

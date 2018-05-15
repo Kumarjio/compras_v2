@@ -1,0 +1,10 @@
+<?php
+class AsignacionUsuariosCommand extends CConsoleCommand{
+
+	public function run($args){
+
+		$actualizaAsignacion = UsuariosActividadTipologia::model()->updateAll(array('asignacion'=>0));
+		
+	}
+}
+?>

@@ -104,4 +104,27 @@ class ActiveRecordLog extends CActiveRecord
 			'criteria'=>$criteria,
 		));
 	}
+
+	public function search_2($model, $idmodel)
+	{
+		// Warning: Please modify the following code to remove attributes that
+		// should not be searched.
+
+		$criteria=new CDbCriteria;
+
+		$criteria->compare('id',$this->id);
+		$criteria->compare('action',$this->action,true);
+		$criteria->compare('model',$model,true);
+		$criteria->compare('idmodel',$idmodel);
+		$criteria->compare('iduser',$this->iduser);
+		$criteria->compare('field',$this->field,true);
+		$criteria->compare('username',$this->username,true);
+		$criteria->compare('description',$this->description,true);
+		$criteria->compare('description_new',$this->description_new,true);
+
+		return new CActiveDataProvider($this, array(
+			'criteria' => $criteria,
+			'pagination'=>array('pageSize'=>500),
+		));
+	}
 }

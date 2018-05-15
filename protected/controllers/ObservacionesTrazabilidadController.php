@@ -32,7 +32,7 @@ class ObservacionesTrazabilidadController extends Controller
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('create','update', 'index','admin'),
+				'actions'=>array('create','update', 'index','admin', 'todos'),
 				'users'=>array('@'),
 			),
 			array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -128,7 +128,8 @@ class ObservacionesTrazabilidadController extends Controller
 				$model->attributes = $_POST['ObservacionesTrazabilidad'];
 				$model->usuario = Yii::app()->user->usuario;
 				if($model->save()){
-					$consulta = new ObservacionesTrazabilidad('search');
+					$consulta = ObservacionesTrazabilidad::model()->findByAttributes(array("id_trazabilidad"=>$model->id_trazabilidad));
+					$model->unsetAttributes();					
 	            	echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('index', array('model' => $model,'consulta'=>$consulta), true, true)));
 	        	}else{
 	        		echo CJSON::encode(array('status'=>'error', 'content' => $this->renderPartial('index', array('model' => $model,'consulta'=>$consulta), true, true)));
@@ -174,6 +175,15 @@ class ObservacionesTrazabilidadController extends Controller
 		if($model===null)
 			throw new CHttpException(404,'The requested page does not exist.');
 		return $model;
+	}
+
+	public function actionTodos()
+	{
+		if(Yii::App()->request->isAjaxRequest){
+			$na = $_POST['na'];
+			$model=new ObservacionesTrazabilidad('search');
+			echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('todos', array('model' => $model, 'na'=>$na), true, true)));
+		}
 	}
 
 	/**

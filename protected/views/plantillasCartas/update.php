@@ -8,7 +8,7 @@
 	'enableAjaxValidation'=>false,
 	'enableClientValidation' => true,
 	'htmlOptions' => array(
-		'onsubmit'=> 'jQuery.ajax({\'url\':\'/correspondencia/index.php/plantillasCartas/update\',\'dataType\':\'json\',\'data\':$(this).serialize(),\'type\':\'post\',\'success\':function(data){if(data.status == \'success\'){$(\'#dialogo-plantilla\').modal(\'hide\'); $(\'#plantilla-grid\').yiiGridView.update(\'plantilla-grid\');}else{$(\'#body-plantilla\').html(data.content);}},\'cache\':false});return false;'
+		'onsubmit'=> 'jQuery.ajax({\'url\':\''.Yii::app()->createUrl('plantillasCartas/update').'\',\'dataType\':\'json\',\'data\':$(this).serialize(),\'type\':\'post\',\'success\':function(data){if(data.status == \'success\'){$(\'#dialogo-plantilla\').modal(\'hide\'); $(\'#plantilla-grid\').yiiGridView.update(\'plantilla-grid\');}else{$(\'#body-plantilla\').html(data.content);}},\'cache\':false});return false;'
 	),
 	'clientOptions' => array(
         'validateOnSubmit' => true,
@@ -56,7 +56,7 @@
 	    	'model' => $model,
 	    	'attribute'=>'plantilla',
 	        'editorOptions' => array(
-	            'plugins' => 'basicstyles,toolbar,enterkey,entities,floatingspace,wysiwygarea,indentlist,link,list,dialog,dialogui,button,indent,fakeobjects,table,image,maximize,flash,smiley'
+	            'plugins' => 'basicstyles,toolbar,enterkey,entities,floatingspace,wysiwygarea,indentlist,list,dialog,dialogui,button,indent,fakeobjects,table,maximize,font,pastetext,undo,scayt,horizontalrule,specialchar,removeformat,blockquote,format,preview',
 	        ),
 	    )
 	);?>

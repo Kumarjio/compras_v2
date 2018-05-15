@@ -1,0 +1,40 @@
+--- protected/views/usuario/admin.php
++++ protected/views/usuario/admin.php
+@@ -52,37 +48,11 @@
+               'label'=>'Roles',
+               'url'=>'$data->id',
+               'icon'=>'glyphicon glyphicon-eye-open',
+-			  'options'=>array('style'=> 'font-size: 1.5em;'),
+               //'click'=> 'function(){observaciones($(this).parent().parent().children(":nth-child(5)").text());}',
+               'click'=> 'js:function(){return roles(this);}',
+           ),
+         )
+       ),
+-      array(
+-        'class'=>'booster.widgets.TbButtonColumn',
+-        'template'=>'{inhabilitar}{habilitar}',
+-        'buttons' => array(
+-          'inhabilitar' => array(
+-        	  'visible'=>'$data->activo',
+-              'label'=>'Inhabilitar',
+-              'url'=>'$data->id',
+-              'icon'=>'glyphicon glyphicon-remove',
+-			  'options'=>array('style'=> 'font-size: 1.5em;'),
+-              //'click'=> 'function(){observaciones($(this).parent().parent().children(":nth-child(5)").text());}',
+-              'click'=> 'js:function(){return inhabilitar(this);}',
+-          ),
+-          'habilitar' => array(
+-        	  'visible'=>'!$data->activo',
+-              'label'=>'Habilitar',
+-              'url'=>'$data->id',
+-              'icon'=>'glyphicon glyphicon-ok',
+-			  'options'=>array('style'=> 'font-size: 1.5em;'),
+-              //'click'=> 'function(){observaciones($(this).parent().parent().children(":nth-child(5)").text());}',
+-              //js:bootbox.confirm("Are you sure?", function(confirmed){console.log("Confirmed: "+confirmed); return true;})'
+-              'click'=> 'js:function(){return confirmarHabilitar(this);}',
+-          ),
+-        )
+-      ),
+ 	),
+ )); ?>
+ <?php $this->beginWidget(

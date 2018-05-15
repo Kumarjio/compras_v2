@@ -96,7 +96,10 @@ class TipoDocumento extends CActiveRecord
 	}
 	public static function cargaDocumentos()
 	{
-	 	$documentos = CHtml::listData(TipoDocumento::model()->findAll(array('order' => 'id')),'id','documento');
-	 	return $documentos;
+	 	return CHtml::listData(TipoDocumento::model()->findAll(array("condition"=>"id <> 3 AND id <> 4 AND id <> 5","select"=>"id, INITCAP(documento) AS documento",'order' => 'id')),'id',CHtml::encode('documento'),true);
+	}
+	public static function cargaDocumentoExcel()
+	{
+	 	return CHtml::listData(TipoDocumento::model()->findAll(array("condition"=>"id = 3","select"=>"id, INITCAP(documento) AS documento",'order' => 'id')),'id',CHtml::encode('documento'),true);
 	}
 }

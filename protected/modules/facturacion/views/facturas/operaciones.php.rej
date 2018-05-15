@@ -1,0 +1,20 @@
+--- modules/facturacion/views/facturas/operaciones.php
++++ modules/facturacion/views/facturas/operaciones.php
+@@ -48,7 +48,7 @@
+ 		      'header' => 'Número de Factura',
+ 		      'name' => 'nro_factura',
+ 		      'type' => 'raw',
+-		      'value' => 'CHtml::link(($data->nro_factura=="")?"No Asignado":$data->nro_factura,Yii::app()->createUrl("facturacion/facturas/view", array("id"=>$data->id_factura)))'
++		      'value' => 'CHtml::link(($data->nro_factura=="")?"No Asignado":$data->nro_factura,Yii::app()->createUrl("facturacion/facturas/update", array("id"=>$data->id_factura)))'
+ 		      ),
+ 		'nit_proveedor',
+                 array(
+@@ -94,7 +94,7 @@
+ 		      'header' => 'Número de Factura',
+ 		      'name' => 'nro_factura',
+ 		      'type' => 'raw',
+-		      'value' => 'CHtml::link(($data->nro_factura=="")?"No Asignado":$data->nro_factura,Yii::app()->createUrl("facturacion/facturas/view", array("id"=>$data->id_factura)))'
++		      'value' => 'CHtml::link(($data->nro_factura=="")?"No Asignado":$data->nro_factura,Yii::app()->createUrl("facturacion/facturas/update", array("id"=>$data->id_factura)))'
+ 		      ),
+ 		'nit_proveedor',
+                 array(

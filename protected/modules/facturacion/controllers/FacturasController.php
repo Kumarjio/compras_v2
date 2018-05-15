@@ -1,0 +1,754 @@
+<?php
+
+Yii::import('application.extensions.SWebServiceFacturacion');
+
+class FacturasController extends Controller {
+
+    /**
+     * @var string the default layout for the views. Defaults to '//layouts/column2', meaning
+     * using two-column layout. See 'protected/views/layouts/column2.php'.
+     */
+    public $layout = '//layouts/bootstrap';
+    public $defaultAction = 'admin';
+    public $model;
+    public $form_1 = array('swFacturas/indexacion', 'swFacturas/revisionanalista', 'swFacturas/devolver_indexacion', 'swFacturas/devolver_revision_analista', 'swFacturas/aprobar_jefe', 'swFacturas/devolver_aprobar_jefe', 'swFacturas/aprobar_gerente', 'swFacturas/devolver_aprobar_gerente');
+    public $_aya;
+
+    /**
+     * @return array action filters
+     */
+    public function filters() {
+        return array(
+            'accessControl', // perform access control for CRUD operations
+        );
+    }
+
+    /**
+     * Specifies the access control rules.
+     * This method is used by the 'accessControl' filter.
+     * @return array access control rules
+     */
+    public function accessRules() {
+        return array(
+            array('allow', // allow all users to perform 'index' and 'view' actions
+                'actions' => array('index', 'view'),
+                'users' => array('*'),
+            ),
+            array('allow', // allow authenticated user to perform 'create' and 'update' actions
+                'actions' => array('create','delete', 'update', 'admin', 'adminOperaciones','verImagen', 'getOrden', 'addOrden', 'deleteOrden', 'addCuenta', 'deleteCuenta', 'addCostos', 'deleteCostos', 'causacion', 'traerDetalleTipi', 'guardarValor', 'guardarValorCentro','addTipificada', 'validarCentro', 'consultarFacturas','autoSave','imagenPermiso','consulta', 'administrativo','devolverACauasacion','devolverAAdministrativo'),
+                'users' => array('@'),
+            ),
+                                                                                      
+                                             
+                                          
+              
+            array('deny', // deny all users
+                'users' => array('*'),
+            ),
+        );
+    }
+
+    protected function beforeAction($action) {
+        parent::beforeAction($action);
+        if ($action->id == "update") {
+            $this->model = $this->loadModel($_GET['id']);
+            if ($this->model->paso_wf == 'swFacturas/causacion') {  
+                if($this->model->usuario_actual == -1){
+                    $this->model->usuario_actual = Yii::app()->user->getState("id_empleado");
+                    if(!$this->model->save())
+                        die(print_r($this->model->getErrors(), true));
+                }
+            }
+
+            if ($this->model->paso_wf == 'swFacturas/jefatura') {
+                if($this->model->usuario_actual == -2){
+                    $this->model->usuario_actual = Yii::app()->user->getState("id_empleado");
+                    $this->model->save();
+                }
+            }
+
+
+            if ($this->model->paso_wf == 'swFacturas/aprobada') {
+                if($this->model->usuario_actual == -3){
+                    $this->model->usuario_actual = Yii::app()->user->getState("id_empleado");
+                    $this->model->save();
+                }
+            }
+
+            if ($this->model->usuario_actual != Yii::app()->user->id_empleado) {
+                //throw new CHttpException(400, 'El usuario no puede modificar esta orden.');
+            } else {
+//                if($this->model->usuario_actual != Yii::app()->user->id_empleado){
+//                        throw new CHttpException(400,'El usuario no puede modificar esta orden.');
+//                }
+                if (!Yii::app()->request->isAjaxRequest) {
+                    //$this->model->procesarConsultaRiesgos();
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public function actionView($id) {
+        $model = $this->loadModel($id);
+        $ordenes = new OrdenesProveedor('search');
+        $cuentas = new CuentaContable('search');
+        $centros = new CentroCostos('search');
+        // Uncomment the following line if AJAX validation is needed
+        // $this->performAjaxValidation($model);
+        $readonly = true;
+        switch ($model->paso_wf) {
+            case 'swFacturas/enviar_fra':
+            case 'swFacturas/devolver_enviar_fra':
+                $ver = 1;
+                break;
+            case 'swFacturas/generacion_lote':
+            case 'swFacturas/generacion_devolver_lote':
+                $ver = 2;
+                break;
+            case 'swFacturas/indexacion':
+            case 'swFacturas/devolver_indexacion':
+                $ver = 3;
+                break;
+            case 'swFacturas/revisionanalista':
+            case 'swFacturas/devolver_revision_analista':
+            case 'swFacturas/aprobar_jefe':
+            case 'swFacturas/devolver_aprobar_jefe':
+            case 'swFacturas/aprobar_gerente':
+            case 'swFacturas/devolver_aprobar_gerente':
+                $ver = 4;
+                break;
+            case 'swFacturas/causacion':
+            case 'swFacturas/devolver_causacion':
+                $ver = 5;
+                break;
+            case 'swFacturas/jefatura':
+                $ver = 6;
+                break;
+            case 'swFacturas/aprobada':
+                $ver = 7;
+                break;
+            case 'swFacturas/pagada':
+                $ver = 8;
+                break;
+            default:
+                break;
+        }
+        if (isset($_GET['CentroCostos'])) {
+            $centros->attributes = $_GET['CentroCostos'];
+        }
+        if (isset($_GET['CuentaContable'])) {
+            $cuentas->attributes = $_GET['CuentaContable'];
+        }
+
+        if (isset($_GET['OrdenesProveedor'])) {
+            $ordenes->attributes = $_GET['OrdenesProveedor'];
+        }
+
+        if (($model->paso_actual == '' && in_array($model->paso_wf, $this->form_1)) || in_array($model->paso_actual, $this->form_1)) {
+            $vista = '_form';
+        } else {
+            $vista = '_form_caus';
+        }
+       
+        $alertas_nit = ListasEspeciales::model()->findByAttributes(array('id_factura' => $model->id_factura));
+        $this->render('view', array(
+            'model' => $model,
+            'readonly' => $readonly,
+            'ordenes' => $ordenes,
+            'cuentas' => $cuentas,
+            'centros' => $centros,
+            'vista' => $vista,
+            'alertas_nit' => $alertas_nit,
+            'ver' => $ver,
+            'actualizado'=>$actualizado
+        ));
+    }
+
+
+    /**
+     * Creates a new model.
+     * If creation is successful, the browser will be redirected to the 'view' page.
+     */
+    public function actionCreate() {
+        $model = new Facturas;
+
+        // Uncomment the following line if AJAX validation is needed
+        // $this->performAjaxValidation($model);
+
+        if (isset($_POST['Facturas'])) {
+            $model->attributes = $_POST['Facturas'];
+            $model->paso_wf = 'swFacturas/indexacion';
+            $model->id_usuario_solicitante = Yii::app()->user->getState('id_empleado');
+
+            if ($model->validate()) {
+                $archivo = CUploadedFile::getInstance($model, 'path_imagen');
+                $ext = substr($archivo->name, strripos($archivo->name, '.'));
+                $arch_cons = Facturas::model()->count();
+                $consec_arch = str_pad($arch_cons + 1, 3, '0', STR_PAD_LEFT);
+                $nombre_archivo = "Factura-" . $consec_arch . "-" . date("YmdHis") . $ext;
+                $ruta = Yii::app()->params['vol_facturas'] . $nombre_archivo;
+                $model->path_imagen = $ruta;
+                $model->fecha_recibido = date('Y-m-d H:i:s');
+                if ($model->save()) {
+                    if (!is_dir(Yii::app()->params['vol_facturas'])) {
+                        mkdir(Yii::app()->params['vol_facturas']);
+                    }
+                    $archivo->saveAs($ruta);
+                    $model->procesarConsultaRiesgos();
+                    $this->redirect(array('update', 'id' => $model->id_factura));
+                }
+            }
+        }
+
+        $this->render('create', array(
+            'model' => $model,
+        ));
+    }
+
+    /**
+     * Updates a particular model.
+     * If update is successful, the browser will be redirected to the 'view' page.
+     * @param integer $id the ID of the model to be updated
+     */
+    public function actionGetOrden() {
+        $nit = $_GET['nit'];
+        $autocomplete = array_map(function($key, $value) {
+            return array('label' => $value, 'value' => $key);
+        }, array_keys(DocumentoProveedor::model()->getOrdenesCompra($nit)), DocumentoProveedor::model()->getOrdenesCompra($nit));
+        echo CJSON::encode($autocomplete);
+    }
+
+    public function actionUpdate($id, $actualizado=false) {
+        
+        $model = $this->loadModel($id);
+        $ordenes = new OrdenesProveedor('search');
+        $cuentas = new CuentaContable('search');
+        $centros = new CentroCostos('search');
+        // Uncomment the following line if AJAX validation is needed
+        // $this->performAjaxValidation($model);
+        $readonly = true;
+        switch ($model->paso_wf) {
+            case 'swFacturas/enviar_fra':
+            case 'swFacturas/devolver_enviar_fra':
+                $ver = 1;
+                break;
+            case 'swFacturas/generacion_lote':
+            case 'swFacturas/generacion_devolver_lote':
+                $ver = 2;
+                break;
+            case 'swFacturas/indexacion':
+            case 'swFacturas/devolver_indexacion':
+                $ver = 3;
+                break;
+            case 'swFacturas/revisionanalista':
+            case 'swFacturas/devolver_revision_analista':
+            case 'swFacturas/aprobar_jefe':
+            case 'swFacturas/devolver_aprobar_jefe':
+            case 'swFacturas/aprobar_gerente':
+            case 'swFacturas/devolver_aprobar_gerente':
+                $ver = 4;
+                break;
+            case 'swFacturas/causacion':
+            case 'swFacturas/devolver_causacion':
+                $ver = 5;
+                break;
+            case 'swFacturas/jefatura':
+                $ver = 6;
+                break;
+            case 'swFacturas/aprobada':
+                $ver = 7;
+                break;
+            case 'swFacturas/pagada':
+                $ver = 8;
+                break;
+            default:
+                break;
+        }
+        if (isset($_GET['CentroCostos'])) {
+            $centros->attributes = $_GET['CentroCostos'];
+        }
+        if (isset($_GET['CuentaContable'])) {
+            $cuentas->attributes = $_GET['CuentaContable'];
+        }
+
+        if (isset($_GET['OrdenesProveedor'])) {
+            $ordenes->attributes = $_GET['OrdenesProveedor'];
+        }
+
+        if (isset($_POST['Facturas'])) {
+            $model->attributes = $_POST['Facturas'];
+            if (isset($_POST['TipificadasFacturas'])) {
+                foreach ($_POST['TipificadasFacturas']['valor'] as $key => $value) {
+                    if ($value != '') {
+                        $tipi = TipificadasFacturas::model()->findByPk($key);
+                        $tipi->valor = $value;
+                        $tipi->save();
+                    }
+                }
+            }
+            if ($model->validate()) {
+                $model->agregarValidacionesAdicionales();
+                
+                if ($model->save()) {//
+                    if (in_array($model->paso_wf, array('swFacturas/modificar_registros_tipificada', 'swFacturas/modificar_fecha_normal', 'swFacturas/modificar_todas_fechas'))) {
+                        $model2 = Facturas::model()->findByPk($model->id_factura);
+                        $model2->paso_wf = 'swFacturas/generacion_lote';
+                        if (!$model2->save()) {
+                            //print_r($model2->getErrors());print_r($model2->attributes);die;
+                        }
+                    }
+                    if ($model->paso_wf == 'swFacturas/eliminacion_lote') {
+
+                        $model2 = Facturas::model()->findByPk($model->id_factura);
+                        $model2->paso_wf = 'swFacturas/causacion';
+                        $model2->lote = '';
+                        if ($model2->save()) {
+                            Yii::app()->db->createCommand()
+                                    ->delete('facturacion.tipificadas_facturas', 'id_factura=:fra', array(':fra' => $model->id_factura));
+                        }
+                    }
+                    if (in_array($model->paso_wf, array('swFacturas/generacion_lote', 'swFacturas/enviar_fra', 'swFacturas/modificar_registros_tipificada', 'swFacturas/modificar_fecha_normal', 'swFacturas/modificar_todas_fechas'))) {
+
+                        $this->redirect(array('update', 'id' => $model->id_factura, 'actualizado'=>true));
+                    } else if ($ver >= 7){
+                        $this->redirect(array('adminOperaciones'));
+                    } else {
+                        $this->redirect(array('admin'));
+                    }
+                }
+                else{
+                    $actualizado=false;
+                }
+            }
+            else{
+                $actualizado=false;
+            }
+        }
+
+
+        if (($model->paso_actual == '' && in_array($model->paso_wf, $this->form_1)) || in_array($model->paso_actual, $this->form_1)) {
+            $vista = '_form';
+        } else {
+            $vista = '_form_caus';
+        }
+
+        $alertas_nit = ListasEspeciales::model()->findByAttributes(array('id_factura' => $model->id_factura));
+        $this->render('update', array(
+            'model' => $model,
+            'readonly' => $readonly,
+            'ordenes' => $ordenes,
+            'cuentas' => $cuentas,
+            'centros' => $centros,
+            'vista' => $vista,
+            'alertas_nit' => $alertas_nit,
+            'ver' => $ver,
+            'actualizado'=>$actualizado
+        ));
+    }
+
+    public function actionVerImagen() {
+        set_time_limit(0);
+        $file_path = $_GET['archivo'];
+        $content = mime_content_type($file_path);
+        header("Content-Type: $content");
+        $file = @fopen($file_path, "rb");
+        while (!feof($file)) {
+            print(@fread($file, 1024 * 8));
+            ob_flush();
+            flush();
+        }
+        //readfile($file);
+    }
+
+    public function actionTraerDetalleTipi($cuenta, $tipificada, $factura) {
+        $tipi = new TipificadasFacturas;
+        $tipi2 = TipificadasFacturas::model()->findByAttributes(array('cuenta' => $cuenta, 'codigo_tipificada' => $tipificada, 'id_factura' => $factura));
+        echo $this->renderPartial('_grid_tipi', array(
+            'model' => $tipi,
+            'cuenta' => $cuenta,
+            'tipificada' => $tipificada,
+            'factura' => $factura,
+            'tipi_nombre' => $tipi2
+                ), true);
+        Yii::app()->end();
+    }
+
+    public function actionValidarCentro() {
+        $id_tipificadas_facturas = $_POST['id_tipificadas_facturas'];
+        $valor = $_POST['valor'];
+        $model_tipi = TipificadasFacturas::model()->findByPk($id_tipificadas_facturas);
+        $cuantas = TipificadasFacturas::model()->countByAttributes(array(
+            'cuenta' => $model_tipi->cuenta,
+            'codigo_tipificada' => $model_tipi->codigo_tipificada,
+            'id_factura' => $model_tipi->id_factura,
+            'consecutivo_valor' => $model_tipi->consecutivo_valor));
+        if ($cuantas > 1) {
+            $tipificadas = TipificadasFacturas::model()->findAllByAttributes(array(
+                'cuenta' => $model_tipi->cuenta,
+                'codigo_tipificada' => $model_tipi->codigo_tipificada,
+                'id_factura' => $model_tipi->id_factura,
+                'consecutivo_valor' => $model_tipi->consecutivo_valor));
+            foreach ($tipificadas as $t) {
+                if ($t->centro_costos == $valor) {
+                    echo CJSON::encode(array('status' => 0));
+                    Yii::app()->end();
+                }
+            }
+        }
+        echo CJSON::encode(array('status' => 1));
+        Yii::app()->end();
+    }
+
+    public function actionAutoSave() {
+        $id_factura = $_POST['id_factura'];
+        $valor = $_POST['valor'];
+        $atributo = $_POST['atributo'];
+        $model = Facturas::model()->findByPk($id_factura);
+        $model->setScenario('autosave');
+        $model->$atributo = $valor;
+        
+
+        if ($model->save()) {
+            echo CJSON::encode(array('status' => 1));
+        } else {
+            echo CJSON::encode(array('status' => 0, 'errores'=>  print_r($model->getErrors(), true)));
+        }
+    }
+    
+    public function actionGuardarValor() {
+        $id_tipificadas_facturas = $_POST['id_tipificadas_facturas'];
+        $valor = $_POST['valor'];
+        $atributo = $_POST['atributo'];
+        $model_tipi = TipificadasFacturas::model()->findByPk($id_tipificadas_facturas);
+        if ($atributo == 'cuenta_x_pagar') {
+            if ($valor != '') {
+                $cuantas = TipificadasFacturas::model()->updateAll(array('cuenta_por_pagar' => $valor), "cuenta=:cta and codigo_tipificada=:cod and id_factura=:id", array(
+                    ':cta' => $model_tipi->cuenta,
+                    ':cod' => $model_tipi->codigo_tipificada,
+                    ':id' => $model_tipi->id_factura
+                ));
+                echo CJSON::encode(array('status' => $cuantas));
+                Yii::app()->end();
+            }
+        } else {
+            $model_tipi->$atributo = $valor;
+        }
+
+        if ($model_tipi->save()) {
+            echo CJSON::encode(array('status' => 1));
+        } else {
+            echo CJSON::encode(array('status' => 1));
+        }
+    }
+
+    public function actionGuardarValorCentro() {
+        $id_centro_costos_factura = $_POST['id_centro_costos_factura'];
+        $valor = $_POST['valor'];
+        $atributo = $_POST['atributo'];
+        $model_tipi = CentroCostosFacturas::model()->findByPk($id_centro_costos_factura);
+        $model_tipi->$atributo = $valor;
+
+        if ($model_tipi->save()) {
+            echo CJSON::encode(array('status' => 1));
+        } else {
+            echo CJSON::encode(array('status' => 1));
+        }
+    }
+    
+    public function actionAddOrden($id_factura, $id_orden) {
+        $model = new OrdenesFactura;
+        $model->id_factura = $id_factura;
+        $model->id_orden = $id_orden;
+        $detalle = DetalleOrdenCompra::model()->findByAttributes(array('id_orden_compra' => $model->id_orden));
+        $id_centro_costos = $detalle->orden_solicitud->ordenSolicitudCostoses[0]->id_centro_costos;
+        $nombre = $detalle->orden_solicitud->ordenSolicitudCostoses[0]->idCentroCostos->nombre;
+        $ccontable = Yii::app()->db->createCommand("select distinct cc.codigo, cc.nombre , cc.id as id_cuenta, o.id  from orden as o 
+                inner join orden_solicitud as os on o.id = os.id_orden
+                inner join orden_solicitud_costos as osc on osc.id_orden_solicitud = os.id
+                inner join cuenta_contable as cc on cc.id = osc.id_cuenta_contable 
+                where o.id = $model->id_orden")->queryAll();
+        $ccostos = Yii::app()->db->createCommand("select distinct cc.codigo, cc.nombre , cc.id as id_centro_costo, o.id  from orden as o 
+                inner join orden_solicitud as os on o.id = os.id_orden
+                inner join orden_solicitud_costos as osc on osc.id_orden_solicitud = os.id
+        inner join centro_costos as cc on cc.id = osc.id_centro_costos
+                where o.id = $model->id_orden")->queryAll();
+        $res = "";
+        if ($model->save()) {
+            foreach ($ccontable as $c) {
+                $model_cuenta = new CuentasFacturas;
+                $model_cuenta->id_factura = $id_factura;
+                $model_cuenta->id_cuenta = $c[id_cuenta];
+
+                if ($model_cuenta->save()) {
+                    
+                }
+            }
+            foreach ($ccostos as $c) {
+                $model_costos = new CentroCostosFacturas;
+                $model_costos->id_factura = $id_factura;
+                $model_costos->id_centro_costos = $c[id_centro_costo];
+
+                if ($model_costos->save()) {
+                    
+                }
+            }
+            echo CJSON::encode(array('status' => 'success', 'centro' => $id_centro_costos, 'nombre_centro' => $nombre));
+        }
+    }
+
+    public function actionAddCostos($id_factura, $id) {
+
+        $model_costos = new CentroCostosFacturas;
+        $model_costos->id_factura = $id_factura;
+        $model_costos->id_centro_costos = $id;
+
+        $model_costos->save();
+        echo CJSON::encode(array('status' => 'success'));
+    }
+
+    public function actionAddCuenta($id_factura, $id_cuenta) {
+        $model = new CuentasFacturas;
+        $model->id_factura = $id_factura;
+        $model->id_cuenta = $id_cuenta;
+
+        if ($model->save()) {
+            echo CJSON::encode(array('status' => 'success'));
+        }
+    }
+
+    public function actionAddTipificada($id_tipi) {
+        $model = TipificadasFacturas::model()->findByPk($id_tipi);
+        $model_new = new TipificadasFacturas;
+        $model_new->attributes = $model->attributes;
+        $model_new->tipo_consulta = 1;
+        $model_new->valor = null;
+        $model_new->centro_costos = null;
+        $model_new->agencia = null;
+
+        if ($model_new->save()) {
+            echo CJSON::encode(array('status' => 'success'));
+        }
+    }
+
+    public function actionDeleteCuenta($id) {
+        if (Yii::app()->request->isPostRequest) {
+            // we only allow deletion via POST request
+            $model = CuentasFacturas::model()->findByPk($id);
+            $model->delete();
+
+            // if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
+            if (!isset($_GET['ajax']))
+                $this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('admin'));
+        } else
+            throw new CHttpException(400, 'Invalid request. Please do not repeat this request again.');
+    }
+
+    public function actionDeleteCostos($id) {
+        if (Yii::app()->request->isPostRequest) {
+            // we only allow deletion via POST request
+            $model = CentroCostosFacturas::model()->findByPk($id);
+            $model->delete();
+
+            // if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
+            if (!isset($_GET['ajax']))
+                $this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('admin'));
+        } else
+            throw new CHttpException(400, 'Invalid request. Please do not repeat this request again.');
+    }
+
+    public function actionDeleteOrden($id) {
+        if (Yii::app()->request->isPostRequest) {
+            // we only allow deletion via POST request
+            $model = OrdenesFactura::model()->findByPk($id);
+            $model->delete();
+
+            // if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
+            if (!isset($_GET['ajax']))
+                $this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('admin'));
+        } else
+            throw new CHttpException(400, 'Invalid request. Please do not repeat this request again.');
+    }
+
+    public function actionConsultarFacturas() {
+        $model = new Facturas;
+        $res = $model->consultarFacturas();
+        
+        
+        //echo CJSON::encode($res);
+        $this->redirect('adminOperaciones');
+    }
+
+    public function actionDelete($id) {
+        if (Yii::app()->request->isPostRequest) {
+            // we only allow deletion via POST request
+            $model = $this->loadModel($id);
+            $listas = ListasEspeciales::model()->deleteAllByAttributes(array('id_factura'=>$model->id_factura));
+            $model->delete();
+
+            // if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
+            if (!isset($_GET['ajax']))
+                $this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('admin'));
+        } else
+            throw new CHttpException(400, 'Invalid request. Please do not repeat this request again.');
+    }
+
+    /**
+     * Lists all models.
+     */
+    public function actionIndex() {
+        $dataProvider = new CActiveDataProvider('Facturas');
+        $this->render('index', array(
+            'dataProvider' => $dataProvider,
+        ));
+    }
+
+    /**
+     * Manages all models.
+     */
+    public function actionAdmin() {
+//            $this->_aya = new SWebServiceFacturacion;
+//            $cuentas = array('18250001','19202000','51600502','51802001');
+//            $respuesta = $this->_aya->cuentasTipificadas($cuentas); 
+//            
+//            echo '<pre>';
+//            print_r($respuesta);
+//            echo '</pre>';
+//            
+        $this->layout = '//layouts/listar';
+        $model = new Facturas('search');
+        $model->unsetAttributes();  // clear any default values
+        if (isset($_GET['Facturas']))
+            $model->attributes = $_GET['Facturas'];
+
+        $this->model = $model;
+        $this->render('admin', array(
+            'model' => $model,
+        ));
+    }
+    
+
+    public function actionConsulta() {
+
+        $this->layout = '//layouts/listar';
+        $model = new Facturas('search');
+        $model->unsetAttributes();  // clear any default values
+        if (isset($_GET['Facturas']))
+            $model->attributes = $_GET['Facturas'];
+        
+        $this->model = $model;
+        $this->render('consulta', array(
+            'model' => $model,
+        ));
+    }
+    
+    public function actionAdminOperaciones() {
+        
+        $this->layout = '//layouts/listar';
+        $model = new Facturas('search');
+        $model->unsetAttributes();  // clear any default values
+        if (isset($_GET['Facturas']))
+            $model->attributes = $_GET['Facturas'];
+        $model->razon_social = $_GET['Facturas']['razon_social'];
+        
+        $this->model = $model;
+        $this->render('operaciones', array(
+            'model' => $model,
+        ));
+    }
+    
+    public function actionCausacion() {
+
+        $this->layout = '//layouts/listar';
+        $model = new Facturas('search');
+        $model->unsetAttributes();  // clear any default values
+        if (isset($_GET['Facturas']))
+            $model->attributes = $_GET['Facturas'];
+
+        $this->model = $model;
+        $this->render('causacion', array(
+            'model' => $model,
+        ));
+    }
+
+    /**
+     * Returns the data model based on the primary key given in the GET variable.
+     * If the data model is not found, an HTTP exception will be raised.
+     * @param integer the ID of the model to be loaded
+     */
+    public function loadModel($id) {
+        $model = Facturas::model()->findByPk($id);
+        if ($model === null)
+            throw new CHttpException(404, 'The requested page does not exist.');
+        return $model;
+    }
+
+    /**
+     * Performs the AJAX validation.
+     * @param CModel the model to be validated
+     */
+    protected function performAjaxValidation($model) {
+        if (isset($_POST['ajax']) && $_POST['ajax'] === 'facturas-form') {
+            echo CActiveForm::validate($model);
+            Yii::app()->end();
+        }
+    }
+    public function actionImagenPermiso(){
+        $path = $_GET['path'];
+        $tipopath = explode(".",$path);
+        $tipopath = $tipopath[1];
+          if(strtolower($tipopath) == "pdf"){
+            header('Content-Type: application/pdf');
+          }else{
+            header('Content-Type: image/jpeg');
+          }
+
+        readfile($path);
+    }
+
+    public function actionAdministrativo(){
+
+        $this->layout = '//layouts/listar';
+        $model = new Facturas('search');
+        $model->unsetAttributes();  // clear any default values
+        if (isset($_GET['Facturas']))
+            $model->attributes = $_GET['Facturas'];
+
+        $this->model = $model;
+        $this->render('administrativo', array(
+            'model' => $model,
+        ));
+    }
+
+    public function actionDevolverACauasacion(){
+        if (Yii::app()->request->isAjaxRequest) {
+            $id = $_GET['id'];
+            $model = Facturas::model()->findByPk($id);
+            $model->usuario_actual = -1;
+            $model->observacion = "Devuelto a Bandeja Común";
+            if($model->save())
+                echo CJSON::encode(array('status'=>'success', 'content' => 'Ok Devuelto'));
+            else
+                echo CJSON::encode(array('status'=>'success', 'content' => print_r($model->getErrors())));
+            
+        } else
+            throw new CHttpException(400, 'Invalid request. Please do not repeat this request again.');
+    }
+
+    public function actionDevolverAAdministrativo(){
+        if (Yii::app()->request->isAjaxRequest) {
+
+            $id = $_GET['id'];
+            $model = Facturas::model()->findByPk($id);
+            $model->usuario_actual = -2;
+            $model->observacion = "Devuelto a Bandeja Común";
+            if($model->save())
+                echo CJSON::encode(array('status'=>'success', 'content' => 'Ok Devuelto'));
+            else
+                echo CJSON::encode(array('status'=>'success', 'content' => print_r($model->getErrors())));
+            
+        } else
+            throw new CHttpException(400, 'Invalid request. Please do not repeat this request again.');
+    }
+}

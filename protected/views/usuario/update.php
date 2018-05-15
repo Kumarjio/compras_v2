@@ -8,7 +8,7 @@
 	'enableAjaxValidation'=>false,
 	'enableClientValidation' => true,
 	'htmlOptions' => array(
-		'onsubmit'=> 'jQuery.ajax({\'url\':\'/correspondencia/index.php/usuario/update\',\'dataType\':\'json\',\'data\':$(this).serialize(),\'type\':\'post\',\'success\':function(data){if(data.status == \'success\'){$(\'#dialogo-usuario\').modal(\'hide\'); $(\'#usuario-grid\').yiiGridView.update(\'usuario-grid\');}else{$(\'#body-usuario\').html(data.content);}},\'cache\':false});return false;'
+		'onsubmit'=> 'jQuery.ajax({\'url\':\''.Yii::app()->createUrl('usuario/update').'\',\'dataType\':\'json\',\'data\':$(this).serialize(),\'type\':\'post\',\'success\':function(data){if(data.status == \'success\'){$(\'#dialogo-usuario\').modal(\'hide\'); $(\'#usuario-grid\').yiiGridView.update(\'usuario-grid\');}else{$(\'#body-usuario\').html(data.content);}},\'cache\':false});return false;'
 	),
 	'clientOptions' => array(
         'validateOnSubmit' => true,
@@ -16,6 +16,7 @@
 ));?>
 <?php echo $form->errorSummary($model)?>
 <?php echo $form->errorSummary($roles)?>
+<?php echo $form->errorSummary($areas)?>
 <div class='col-md-6 oculto'>
 	<div class="form-group">
    		<?php echo $form->textField($model,'id',array('class'=>'form-control')); ?>
@@ -64,12 +65,6 @@
   	</div>
 </div>
 <div class='col-md-6'>
-  <?php echo $form->labelEx($model,'area'); ?>
-  <div class="form-group">
-    <?php echo $form->dropDownList($model,'area', Areas::model()->cargaAreas(),array('class'=>'form-control','prompt'=>'...')); ?>
-  </div>
-</div>
-<div class='col-md-12'>
 	<?php echo $form->labelEx($roles,'id_rol'); ?>
     <div class="form-group">
       <?php //echo $form->textarea($model,'usuario',array('class'=>'form-control','readonly'=>'true')); 
@@ -85,6 +80,23 @@
 	  ));*/?>
     	<?php echo $form->dropDownList($roles,'id_rol', Roles::cargarRoles(),array('class'=>'form-control','prompt'=>'...')); ?>
     </div>
+</div>
+<div class='col-md-12'>
+  <?php echo $form->labelEx($areas,'id_area'); ?>
+  <div class="form-group">
+    <?php //echo $form->dropDownList($areas,'id_area', Areas::model()->cargaAreas(),array('class'=>'form-control','prompt'=>'...')); ?>
+	  <?php
+	   $this->widget('ext.select2.ESelect2',array(
+		  'model'=>$areas,
+		  'attribute'=>'id_area',
+		  'data'=>Areas::model()->cargaAreas(),
+		  'htmlOptions'=>array(
+		    'options'=>array('selected'=>true),
+		    'multiple'=>'multiple',
+		    'style'=>'width:548px',
+		  ),
+	  ));?>
+  </div>
 </div>
 <div class="row">
 </div>

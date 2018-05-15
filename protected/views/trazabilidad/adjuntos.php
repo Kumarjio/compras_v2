@@ -9,7 +9,7 @@
 	'enableAjaxValidation'=>false,
 	'enableClientValidation' => true,
 	'htmlOptions' => array(
-		'onsubmit'=> 'jQuery.ajax({\'url\':\'/correspondencia/index.php/trazabilidad/adjuntar\',\'dataType\':\'json\',\'data\':$(this).serialize(),\'type\':\'post\',\'success\':function(data){if(data.status == \'success\'){$(\'#dialogo-plantilla\').modal(\'hide\'); parent.window.location.reload();}else{$(\'#body-gestion\').html(data.content);}},\'cache\':false});return false;',
+		'onsubmit'=> 'jQuery.ajax({\'url\':\''.Yii::app()->createUrl('trazabilidad/adjuntar').'\',\'dataType\':\'json\',\'data\':$(this).serialize(),\'type\':\'post\',\'success\':function(data){if(data.status == \'success\'){$(\'#dialogo-plantilla\').modal(\'hide\'); parent.window.location.reload();}else{$(\'#body-gestion\').html(data.content);}},\'cache\':false});return false;',
 		'enctype'=>'multipart/form-data'
 	),
 	'clientOptions' => array(
@@ -50,7 +50,7 @@
                             'onComplete'=>'js:function(id, name, response){document.getElementById("AdjuntosTrazabilidad_archivo").value =  response.ruta;}',
                           ),
          'validation'=>array(
-           'allowedExtensions'=>array('jpg','jpeg','png','pdf','xls','csv','msg','tif'),
+           'allowedExtensions'=>array('jpg','jpeg','png','pdf','xls','csv','msg','tif','xlsx','msg'),
              'sizeLimit'=>2 * 1024 * 1024,
           ),
         )

@@ -32,7 +32,7 @@ class CartasFisicasController extends Controller
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('create','update','admin','punteo','impresion','punteoExcel','consultaRegistros'),
+				'actions'=>array('create','update','admin','punteo','impresion','punteoExcel','punteoExcel472','consultaRegistros'),
 				'users'=>array('@'),
 			),
 			array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -135,8 +135,8 @@ class CartasFisicasController extends Controller
 	{
 		$model=new CartasFisicas('search');
 		$model->unsetAttributes();  // clear any default values
-		if(isset($_GET['CartasFisicas']))
-			$model->attributes=$_GET['CartasFisicas'];
+		if(isset($_POST['CartasFisicas']))
+			$model->attributes=$_POST['CartasFisicas'];
 
 		$this->render('admin',array(
 			'model'=>$model,
@@ -196,27 +196,18 @@ class CartasFisicasController extends Controller
 	}
 	public function actionPunteoExcel()
 	{
-		$model=new CartasFisicas('search');
-		$model->unsetAttributes();
-		if(isset($_GET['CartasFisicas']))
-			$model->attributes=$_GET['CartasFisicas'];
-
-		$this->renderPartial('_punteo_excel',array(
-			'model'=>$model
-		));
+		$model=CartasFisicas::consultaExcel();
+		if($model){
+			$this->renderPartial('_punteo_excel',array('model'=>$model));
+		}else{
+			return false;	
+		}
 	}
 	public function actionPunteoExcel472()
 	{
-		$model=new CartasFisicas('search');
-		$model->unsetAttributes();
-		if(isset($_GET['CartasFisicas']))
-			$model->attributes=$_GET['CartasFisicas'];
-		
-		$courrier_472 = CartasFisicas::model()->with( array('idCartas'=>array("alias"=>"c",'condition'=>'c.punteo = 2 AND c.entrega = 2 AND c.proveedor = 1')))->findAll("t.firma = :u", array(":u"=>"2"));
+		$courrier_472 = CartasFisicas::consultaExcel472();
 		if($courrier_472){
-			$this->renderPartial('_punteo_excel_472',array(
-				'model'=>$model
-			));
+			$this->renderPartial('_punteo_exel_472',array('model'=>$courrier_472));
 		}else{
 			return false;
 		}

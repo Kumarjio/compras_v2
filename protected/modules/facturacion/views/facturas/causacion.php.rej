@@ -1,0 +1,40 @@
+--- modules/facturacion/views/facturas/causacion.php
++++ modules/facturacion/views/facturas/causacion.php
+@@ -53,5 +53,37 @@
+                     'name'=>'usuario_actual',
+                     'value'=>'$data->usuarioActual->nombre_completo'
+                 ),
++            
++		/*
++		'rte_fte',
++		'valor_rte_fte',
++		'rte_iva',
++		'valor_rte_iva',
++		'rte_ica',
++		'valor_rte_ica',
++		'rte_timbre',
++		'valor_rte_timbre',
++		'id_centro_costos',
++		'nro_pagos',
++		'cuenta_x_pagar',
++		'id_cuenta_contable',
++		'analista_encargado',
++		'fecha_vencimiento',
++		'fecha_factura',
++		'fecha_recibido',
++		'path_imagen',
++		'paso_wf',
++		'creacion',
++		'actualizacion',
++		*/
++		array(
++                    'class'=>'bootstrap.widgets.BootButtonColumn',
++                    'template' => '{delete}',
++                    'buttons' => array(
++                        'delete' => array(
++                            'visible' => '$data->paso_wf == "swFacturas/indexacion"'
++                            )
++                        )
++		),
+ 	),
+ )); ?>

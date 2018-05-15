@@ -54,11 +54,11 @@ $campo_peso = 200;
 $campo_valordeclarado = 1000;
 $campo_dimension = 2;
 
-foreach (CartasFisicas::consultaExcel472() as $consulta) {
+foreach ($model as $consulta) {
 	$objPHPExcel->getActiveSheet()->SetCellValue("A".$fila, strtoupper($consulta->idCartas->nombre_destinatario)); 
 	$objPHPExcel->getActiveSheet()->SetCellValue("B".$fila, strtoupper($consulta->direccion));
 	$objPHPExcel->getActiveSheet()->SetCellValue("C".$fila, strtoupper($consulta->idCartas->na0->ciudad0->ciudad));
-	$objPHPExcel->getActiveSheet()->SetCellValue("D".$fila, ); //null 
+	$objPHPExcel->getActiveSheet()->SetCellValue("D".$fila, ''); //null 
 	$objPHPExcel->getActiveSheet()->SetCellValue("E".$fila, $campo_peso);
 	$objPHPExcel->getActiveSheet()->SetCellValue("F".$fila, $campo_valordeclarado);
 	$objPHPExcel->getActiveSheet()->SetCellValue("G".$fila, $campo_dimension);
@@ -82,8 +82,9 @@ foreach (CartasFisicas::consultaExcel472() as $consulta) {
 	$fila++;
 }
 // Redirect output to a clientâ€™s web browser (Excel5)
+$name="Firma Fisica 472 ".date("d-m-Y h:i A").".xls";
 header('Content-Type: application/vnd.ms-excel');
-header('Content-Disposition: attachment;filename="Firma Fisica 472"'.date("d-m-Y h:i A").'".xls"');
+header('Content-Disposition: attachment;filename="'.$name.'"');
 header('Cache-Control: max-age=0');
 // If you're serving to IE 9, then the following may be needed
 header('Cache-Control: max-age=1');

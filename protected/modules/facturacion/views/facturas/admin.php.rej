@@ -1,0 +1,55 @@
+--- modules/facturacion/views/facturas/admin.php
++++ modules/facturacion/views/facturas/admin.php
+@@ -67,13 +67,10 @@
+ 
+                            array(
+                                'class'=>'bootstrap.widgets.BootButtonColumn',
+-                               'template' => '{cambiar}',
++                               'template' => '{delete}',
+                                'buttons' => array(
+-                                   'cambiar' => array(
+-                                            'url' => 'Yii::app()->createUrl(\'facturacion/facturas/devolverACauasacion/id/\'. $data->id_factura)',
+-                                            'label' => "<i class=\"icon-repeat\"></i>",
+-                                            'options'=>array('title' => 'Enviar a bandeja común', 'class'=>'devolverCaus'),
+-                                            'visible'=>'$data->paso_wf == \'swFacturas/causacion\''
++                                   'delete' => array(
++                                       'visible' => '$data->paso_wf == "swFacturas/indexacion"'
+                                        )
+                                    )
+                            ),
+@@ -271,35 +268,3 @@
+ )); 
+ } 
+  ?>
+-
+-<script type="text/javascript">
+-  $('#facturas-grid-caus').find(".devolverCaus").live("click", function(e){
+-      e.preventDefault();
+-      if(confirm('¿Está seguro que desea devolver esta factura a la bandeja común?'))
+-          devolverABandeja(this);
+-  });
+-
+-  function devolverABandeja(el){
+-      var myOktrans = function(data){
+-          alert(data.content);
+-          $('#facturas-grid-caus').yiiGridView.update('facturas-grid-caus');
+-      };
+-      doReq(extractUrl(el), myOktrans, null);
+-  }
+-  
+-
+-  function doReq(url, ok, fail){
+-        
+-      jQuery.ajax(
+-          {'url':url,
+-          'dataType':'json',
+-          'type':'post',
+-          'success': ok,
+-          'cache':false}  
+-      );
+-  } 
+-
+-  function extractUrl(el){
+-      return $(el).attr("href");
+-  }
+-</script>

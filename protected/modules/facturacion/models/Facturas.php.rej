@@ -1,0 +1,54 @@
+--- modules/facturacion/models/Facturas.php
++++ modules/facturacion/models/Facturas.php
+@@ -525,34 +525,6 @@
+             'criteria'=>$criteria,
+         ));
+     }
+-           
+-    public function search_administrativo()
+-    {
+-        // Warning: Please modify the following code to remove attributes that
+-        // should not be searched.
+-
+-        $criteria=new CDbCriteria;
+-
+-        $criteria->compare('id_factura',$this->id_factura);
+-        $criteria->compare('id_orden',$this->id_orden);
+-        $criteria->compare('nit_proveedor',$this->nit_proveedor);
+-        $criteria->compare('cant_productos',$this->cant_productos);
+-        $criteria->compare('valor_productos',$this->valor_productos);
+-        $criteria->compare('analista_encargado',$this->analista_encargado);
+-        $criteria->compare('fecha_vencimiento',$this->fecha_vencimiento,true);
+-        $criteria->compare('fecha_factura',$this->fecha_factura,true);
+-        $criteria->compare('fecha_recibido',$this->fecha_recibido,true);
+-        $criteria->compare('path_imagen',$this->path_imagen,true);
+-        $criteria->compare('paso_wf',$this->paso_wf,true);
+-        $criteria->compare('usuario_actual',-2);
+-        $criteria->compare('id_usuario_reemplazado',$this->id_usuario_reemplazado);
+-        $criteria->compare('creacion',$this->creacion,true);
+-        $criteria->compare('actualizacion',$this->actualizacion,true);
+-
+-        return new CActiveDataProvider($this, array(
+-            'criteria'=>$criteria,
+-        ));
+-    }
+         
+     public function search_operaciones()
+     {
+@@ -832,13 +804,12 @@
+         }
+         
+         public function paraAdministrativo() {
+-            $this->usuario_actual = -2;
+-            //$this->usuario_actual = Contratos::model()->findByAttributes(array('id_cargo'=>509))->id_empleado;
+-            //+$this->verificarReemplazo();
++            $this->usuario_actual = Contratos::model()->findByAttributes(array('id_cargo'=>509))->id_empleado;
++            $this->verificarReemplazo();
+         }
+         
+         public function paraOperaciones() {
+-            $this->usuario_actual = -3;
++            $this->usuario_actual = Parametros::model()->findByPk(1)->id_empl_operaciones;
+             $this->verificarReemplazo();
+         }
+         

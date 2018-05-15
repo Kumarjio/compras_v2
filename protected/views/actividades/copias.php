@@ -7,7 +7,7 @@ $form=$this->beginWidget('booster.widgets.TbActiveForm',array(
 	'id'=>'form-copias',
 	'enableAjaxValidation'=>false,
 	'htmlOptions' => array(
-		'onsubmit'=> 'jQuery.ajax({\'url\':\'/correspondencia/index.php/actividades/copias\',\'dataType\':\'json\',\'data\':$(this).serialize(),\'type\':\'post\',\'success\':function(data){if(data.status == \'success\'){var rows = parseFloat($(\'#rows\').val()) + parseFloat(1);$(\'#modal-copias\').modal(\'hide\');$(\'#modal-gestion\').modal(\'show\');$(\'#rows\').val(rows);}else{	$(\'#body-copias\').html(data.content);}},\'cache\':false});return false;'
+		'onsubmit'=> 'jQuery.ajax({\'url\':\''.Yii::app()->createUrl('actividades/copias').'\',\'dataType\':\'json\',\'data\':$(this).serialize(),\'type\':\'post\',\'success\':function(data){if(data.status == \'success\'){var rows = parseFloat($(\'#rows\').val()) + parseFloat(1);$(\'#modal-copias\').modal(\'hide\');$(\'#modal-gestion\').modal(\'show\');$(\'#rows\').val(rows);}else{	$(\'#body-copias\').html(data.content);}},\'cache\':false});return false;'
 	),
 ));?>
 <?php if($model->hasErrors()){ ?>

@@ -1,130 +1,270 @@
 var App = function (v) {
-     function pruebaModal(el){
-        var myOkPruebaModal = function(data){
-            okOnGet(data, function(post_data){
-                okOnPost(post_data, function(){
-                    alert('hola nilo');
-                   //$('#itinerario-grid').yiiGridView.update('itinerario-grid');
-                   //$('#gastos-viaje-grid').yiiGridView.update('gastos-viaje-grid');
-                });
-            });
-        };
-        doReq(extractUrl(el), myOkPruebaModal, null);
-     }
+    var modal;
 
-     function asignaCita(el){
-        var myOkItinerario = function(data){
+    function crearContacto(el, m){
+
+        modal = m;
+        var okCrearContacto = function(data){
             okOnGet(data, function(post_data){
                 okOnPost(post_data, function(){
-                    alert();
-                   //$('#itinerario-grid').yiiGridView.update('itinerario-grid');
-                   //$('#gastos-viaje-grid').yiiGridView.update('gastos-viaje-grid');
+                    var url = $(el).attr('urlUpdateList') + "?nit=" + $('#OmCotizacion_nit').val();
+                    var serialized = {'proveedor':$('#OmCotizacion_nit').val()};
+                    doReqData(url, serialized, function(res){
+                        if(res.status == 'ok'){
+                            $('#OmCotizacion_contacto').html(res.combo);
+                            $('#modalCotizacion').modal('show');
+                        }else{
+                            alert(res.mensaje);
+                        }
+                    });
+                    //$('#itinerario-grid').yiiGridView.update('itinerario-grid');
+                    //$('#gastos-viaje-grid').yiiGridView.update('gastos-viaje-grid');
                 });
             });
         };
-        doReq(extractUrl(el), myOkItinerario, null);
+        doReq(extractUrl(el), okCrearContacto, null);
     }
 
-    function nuevoItinerario(el){
-        var myOkItinerario = function(data){
+    function crearContactoOp(el, m){
+
+        modal = m;
+        var okCrearContactoOp = function(data){
             okOnGet(data, function(post_data){
                 okOnPost(post_data, function(){
-                    $('#itinerario-grid').yiiGridView.update('itinerario-grid');
-                    $('#gastos-viaje-grid').yiiGridView.update('gastos-viaje-grid');
+                    var url = $(el).attr('urlUpdateList') + "?nit=" + $('#CotizacionOp_nit').val();
+                    var serialized = {'proveedor':$('#CotizacionOp_nit').val()};
+                    doReqData(url, serialized, function(res){
+                        if(res.status == 'ok'){
+                            $('#CotizacionOp_contacto').html(res.combo);
+                            $('#modalCotizacion').modal('show');
+                        }else{
+                            alert(res.mensaje);
+                        }
+                    });
+                    //$('#itinerario-grid').yiiGridView.update('itinerario-grid');
+                    //$('#gastos-viaje-grid').yiiGridView.update('gastos-viaje-grid');
                 });
             });
         };
-        doReq(extractUrl(el), myOkItinerario, null);
+        doReq(extractUrl(el), okCrearContactoOp, null);
     }
+    function crearProveedor(el, m){
 
-    function cancelarItinerario(el){
-        var myOkItinerario = function(data){
+        modal = m;
+        var okCrearProveedor = function(data){
             okOnGet(data, function(post_data){
                 okOnPost(post_data, function(){
-                    location.reload();
+                    $('#proveedor-om-grid').yiiGridView.update('proveedor-om-grid');
+                    $("#modalProveedores").modal("show");
+                    //$('#itinerario-grid').yiiGridView.update('itinerario-grid');
+                    //$('#gastos-viaje-grid').yiiGridView.update('gastos-viaje-grid');
                 });
             });
         };
-        doReq(extractUrl(el), myOkItinerario, null);
-    } 
+        doReq(extractUrl(el), okCrearProveedor, null);
+    }
 
-    function nuevoTransporte(el){
-        var myOktrans = function(data){
+    function nuevoProducto(el, m){
+
+        modal = m;
+        var okNuevoProducto = function(data){
             okOnGet(data, function(post_data){
                 okOnPost(post_data, function(){
-                    $('#transporte-adicional-grid').yiiGridView.update('transporte-adicional-grid');
-                    $('#gastos-viaje-grid').yiiGridView.update('gastos-viaje-grid');
+                    $('#orden-solicitud-grid').yiiGridView.update('orden-solicitud-grid');
+                    //$("#modalProveedores").modal("show");
+                    //$('#itinerario-grid').yiiGridView.update('itinerario-grid');
+                    //$('#gastos-viaje-grid').yiiGridView.update('gastos-viaje-grid');
                 });
             });
         };
-        doReq(extractUrl(el), myOktrans, null);
+        doReq(extractUrl(el), okNuevoProducto, null);
     }
 
-    function nuevoGastos(el){
-        var myOktrans = function(data){
+    function nuevoProductoTabla(el, m){
+
+        modal = m;
+        var okNuevoProducto = function(data){
             okOnGet(data, function(post_data){
                 okOnPost(post_data, function(){
-                    $('#gastos-viaje-grid').yiiGridView.update('gastos-viaje-grid');
+                    $('#productos-om-grid').yiiGridView.update('productos-om-grid');
+                    $("#modalProductos").modal("show");
+                    //$("#modalProveedores").modal("show");
+                    //$('#itinerario-grid').yiiGridView.update('itinerario-grid');
+                    //$('#gastos-viaje-grid').yiiGridView.update('gastos-viaje-grid');
                 });
             });
         };
-        doReq(extractUrl(el), myOktrans, null);
+        doReq(extractUrl(el), okNuevoProducto, null);
     }
 
-    function nuevaCotizacion(el){
-        var myOktrans = function(data){
+
+    function crearCotizacion(el, m){
+
+        modal = m;
+        var okCrearCotizacion = function(data){
             okOnGet(data, function(post_data){
-                okOnPost(post_data, function(){});
+                okOnPost(post_data, function(data){
+                    actualizarTd(data.grid);
+                    //$("#modalCotizacion").modal("hide");
+                    //$('#'+data.grid).yiiGridView.update(data.grid);
+                });
             });
         };
-        doReq(extractUrl(el), myOktrans, null);
+        doReq(extractUrl(el), okCrearCotizacion, null);
     }
 
-    function verInfoEmision(el){
-        var myOktrans = function(data){
+    function rechazarProducto(el, m){
+
+        modal = m;
+        var okRechazarPto = function(data){
             okOnGet(data, function(post_data){
-                okOnPost(post_data, function(){});
+                okOnPost(post_data, function(data){
+                    actualizarTd(data.grid);
+                    //$('#'+data.grid).yiiGridView.update(data.grid);
+                });
             });
         };
-        doReq(extractUrl(el), myOktrans, null);
-    }  
+        doReq(extractUrl(el), okRechazarPto, null);
+    }
 
+    function agregarPago(el, m){
+
+        modal = m;
+        var okAgregarPago = function(data){
+            okOnGet(data, function(post_data){
+                okOnPost(post_data, function(data){
+                    actualizarPagos(data.grid);
+                });
+            });
+        };
+        doReq(extractUrl(el), okAgregarPago, null);
+    }
+
+    function elegirCotizacion(el, m){
+
+        modal = m;
+        var okElegirCotizacion = function(data){
+            okOnGet(data, function(post_data){
+                okOnPost(post_data, function(data){
+                    actualizarTd(data.grid);
+                });
+            });
+        };
+        doReq(extractUrl(el), okElegirCotizacion, null);
+    }
+
+    function crearDireccion(el, m){
+
+        modal = m;
+        var okCrearDireccion = function(data){
+            okOnGet(data, function(post_data){
+                okOnPost(post_data, function(data){
+                    
+                    actualizarModalProductos(data.id_orden_solicitud);
+                    /*$('#orden-solicitud-direccion-grid').yiiGridView.update('orden-solicitud-direccion-grid',{
+                        data: {'id_orden_solicitud':data.id_orden_solicitud}
+                    });*/
+                });
+            });
+        };
+        doReq(extractUrl(el), okCrearDireccion, null);
+    }
+
+    function agregarOrdenReeem(el, m){
+        modal = m;
+        var okCrearDireccion = function(data){
+            okOnGet(data, function(post_data){
+                okOnPost(post_data, function(data){
+                    $('#orden-reemplazos-grid').yiiGridView.update('orden-reemplazos-grid');
+                });
+            });
+        };
+        doReq(extractUrl(el), okCrearDireccion, null);
+    }
+
+    function agregarProveedor(el, m){
+
+        modal = m;
+        var okAgregarProveedor = function(data){
+            okOnGet(data, function(post_data){
+                okOnPost(post_data, function(data){
+                    
+                    actualizarModalProductos(data.id_orden_solicitud);
+                    /*$('#orden-solicitud-direccion-grid').yiiGridView.update('orden-solicitud-direccion-grid',{
+                        data: {'id_orden_solicitud':data.id_orden_solicitud}
+                    });*/
+                });
+            });
+        };
+        doReq(extractUrl(el), okAgregarProveedor, null);
+    }
+
+
+    function agregarProducto(el, m){
+
+        modal = m;
+        var okAgregarProducto = function(data){
+            okOnGet(data, function(post_data){
+                okOnPost(post_data, function(data){
+                    $('#solpe_grid').yiiGridView.update('solpe_grid');
+                    $('#productos-creados-grid').yiiGridView.update('productos-creados-grid');
+                });
+            });
+        };
+        doReq(extractUrl(el), okAgregarProducto, null);
+    }
     /* Callback usado cuando se envia un form
      * CON parametros post, por ejemplo al hacer
      * click en guardar o actualizar
      */
     function okOnPost(data, fun){
+        if(data.modal !== undefined)
+            modal = data.modal;
         if(data.status == 'success'){
-            mymodal.close();
-            fun();
+            $("#"+modal).modal("hide");
+            fun(data);
         }else{
-            $(mymodal.content).html(data.content);
+            $("#"+modal+" .modal-body").html(data.content);
             registerForm(function(post_data){
                 okOnPost(post_data, fun);
             });
         }
     }
 
+    function okOnPostFijo(data, fun, modalFijo){
+        modal = modalFijo;
+        if(data.status == 'success'){
+            $("#"+modalFijo).modal("hide");
+            fun(data);
+        }else{
+             $("#"+modalFijo+" .modal-body").html(data.content);
+            registerForm(function(post_data){
+                okOnPost(post_data, fun);
+            });
+        }
+    }
     /* Callback usado cuando se envia un form
      * sin parametros post, por ejemplo al cargar
      * el formulario.
      */
     function okOnGet(data, postFun){
-        $(mymodal.content).html(data.content);
+        $("#"+modal+" .modal-body").html(data.content);
         registerForm(postFun);
-        mymodal.open();
+        $("#"+modal).modal("show");
+        //mymodal.open();
     }
 
     function registerForm(postFun){
-        var form = $(mymodal.content).find("form");
-        var button = form.find("input[type=submit]");
+        var form = $("#"+modal+" .modal-body").find("form");
+        var button = form.find("button[type=submit]");
         button.click(function(e){
+           e.preventDefault(); 
            var serialized = form.serialize(); 
            doReqData(form.attr("action"), serialized, postFun);
         });
 
         
-        $datepick = $(mymodal.content).find(".datetime");
+        /*$datepick = $(mymodal.content).find(".datetime");
         var mindate = $datepick.attr("data-min-date");
         
         /*$datepick.datetimepicker({
@@ -132,7 +272,7 @@ var App = function (v) {
             minDate: mindate,
             minTime: '4:30',
             step: 30
-        });*/
+        });
 
         $(".xdsoft_datetimepicker, .xdsoft_time_box").bind('mousewheel DOMMouseScroll', function(e) {
             var scrollTo = null;
@@ -148,7 +288,7 @@ var App = function (v) {
                 e.preventDefault();
                 $(this).scrollTop(scrollTo + $(this).scrollTop());
             }
-        });
+        });*/
 
     }
 
@@ -169,14 +309,17 @@ var App = function (v) {
         jQuery.ajax(
             {'url':url,
             'dataType':'json',
-            'type':'post',
+            'type':'get',
             'success': ok,
             'cache':false}
         );
     }
 
     function extractUrl(el){
-        return $(el).attr("href");
+        url = $(el).attr("href");
+        if (url != undefined)
+            return $(el).attr("href");
+        return $(el).attr("url");
     }
 
     function preventDefaults(){
@@ -396,7 +539,7 @@ var App = function (v) {
 
     function init(){
         preventDefaults();
-        registerItinerarioUpdates();
+        /*registerItinerarioUpdates();
         registerItinerarioUI();
         registerGastosUpdates();
         registerItinerarioCancel();
@@ -407,17 +550,32 @@ var App = function (v) {
         registerViajeroExterno();
         registerGerente();
         registerFireComplete();
-        registerFireChange();
+        registerFireChange();*/
     }
 
     return {
         init: init,
-        asignaCita : asignaCita,
+        crearContacto : crearContacto,
+        crearProveedor : crearProveedor,
+        crearCotizacion : crearCotizacion,
+        agregarPago : agregarPago,
+        elegirCotizacion : elegirCotizacion,
+        rechazarProducto : rechazarProducto,
+        nuevoProducto : nuevoProducto,
+        crearDireccion : crearDireccion,
+        agregarProveedor : agregarProveedor,
+        doReqData : doReqData,
+        okOnPostFijo : okOnPostFijo,
+        agregarProducto : agregarProducto,
+        agregarOrdenReeem : agregarOrdenReeem,
+        nuevoProductoTabla : nuevoProductoTabla,
+        crearContactoOp : crearContactoOp
+        /*asignaCita : asignaCita,
         pruebaModal : pruebaModal,
         nuevoItinerario : nuevoItinerario,
         nuevoTransporte : nuevoTransporte,
         syncFields : syncFields,
-        autoSaveSol: autoSaveSol
+        autoSaveSol: autoSaveSol*/
     };
 
 }(window.viajes);

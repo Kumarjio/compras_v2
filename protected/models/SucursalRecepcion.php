@@ -30,10 +30,13 @@ class SucursalRecepcion extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('na, label, fecha_sucursal, hora_sucursal, no_documentos', 'required'),
+			array('label, fecha_sucursal, hora_sucursal, no_documentos', 'required'),
 			array('fecha_sucursal, no_documentos', 'numerical', 'integerOnly'=>true),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
+			array('fecha_sucursal','safe'),
+			array('hora_sucursal','validarHora'),
+			array('fecha_sucursal','validarFecha'),
 			array('na, label, fecha_sucursal, hora_sucursal, no_documentos', 'safe', 'on'=>'search'),
 		);
 	}
@@ -107,5 +110,39 @@ class SucursalRecepcion extends CActiveRecord
 	{
 		$sucursal = SucursalRecepcion::model()->findByAttributes(array("na"=>$na));
 		return $sucursal;
+	}
+	public function validarHora(){
+		if(strlen($this->hora_sucursal) == 5){
+			$hora = substr($this->hora_sucursal, 0, 2);
+			$min = substr($this->hora_sucursal, 3, 2);
+			if (is_numeric($hora) && is_numeric($min)){
+				if(($hora < 1) && ($hora > 23)){
+					$this->addError("hora_sucursal", $this->getAttributeLabel('hora_sucursal')." invalida.");
+				}else{
+					if(($min < 0) && ($min > 59)){
+						$this->addError("hora_sucursal", $this->getAttributeLabel('hora_sucursal')." invalida.");
+					}
+				}
+			}else{
+				$this->addError("hora_sucursal", $this->getAttributeLabel('hora_sucursal')." invalida.");
+			}
+		}else{
+			$this->addError("hora_sucursal", $this->getAttributeLabel('hora_sucursal')." invalida.");
+		}
+	}
+	public function validarFecha(){
+		if(strlen($this->fecha_sucursal) == 8){
+			$ano = substr($this->fecha_sucursal, 0, 4);
+			$mes = substr($this->fecha_sucursal, 4, 2);
+			$dia = substr($this->fecha_sucursal, 6, 2);
+
+			if (is_numeric($ano) && is_numeric($mes) && is_numeric($dia)){
+				if(!checkdate($mes, $dia, $ano)){
+					$this->addError("fecha_sucursal", $this->getAttributeLabel('fecha_sucursal')." invalida.");
+		   		}
+		   	}else{
+		   		$this->addError("fecha_sucursal", $this->getAttributeLabel('fecha_sucursal')." invalida.");
+		   	}
+		}
 	}
 }

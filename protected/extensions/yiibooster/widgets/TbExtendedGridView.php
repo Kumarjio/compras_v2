@@ -1003,7 +1003,9 @@ class TbSumOperation extends TbOperation
 	{
 		// remove html tags as we cannot access renderDataCellContent from the column
 		$clean = strip_tags($value);
-		$this->total += ((float)$this->extractNumber($clean));
+		$clean =explode('.', $clean);
+		$clean = str_replace(',', '', $clean[0]);
+		$this->total += ($this->extractNumber($clean));
 	}
 
 	/**

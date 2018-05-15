@@ -1,0 +1,106 @@
+--- modules/facturacion/controllers/FacturasController.php
++++ modules/facturacion/controllers/FacturasController.php
+@@ -35,7 +35,7 @@
+                 'users' => array('*'),
+             ),
+             array('allow', // allow authenticated user to perform 'create' and 'update' actions
+-                'actions' => array('create','delete', 'update', 'admin', 'adminOperaciones','verImagen', 'getOrden', 'addOrden', 'deleteOrden', 'addCuenta', 'deleteCuenta', 'addCostos', 'deleteCostos', 'causacion', 'traerDetalleTipi', 'guardarValor', 'guardarValorCentro','addTipificada', 'validarCentro', 'consultarFacturas','autoSave','imagenPermiso','consulta', 'administrativo','devolverACauasacion'),
++                'actions' => array('create','delete', 'update', 'admin', 'adminOperaciones','verImagen', 'getOrden', 'addOrden', 'deleteOrden', 'addCuenta', 'deleteCuenta', 'addCostos', 'deleteCostos', 'causacion', 'traerDetalleTipi', 'guardarValor', 'guardarValorCentro','addTipificada', 'validarCentro', 'consultarFacturas','autoSave','imagenPermiso','consulta'),
+                 'users' => array('@'),
+             ),
+                                                                                       
+@@ -52,31 +52,13 @@
+         parent::beforeAction($action);
+         if ($action->id == "update") {
+             $this->model = $this->loadModel($_GET['id']);
+-            if ($this->model->paso_wf == 'swFacturas/causacion') {  
+-                if($this->model->usuario_actual == -1){
+-                    $this->model->usuario_actual = Yii::app()->user->getState("id_empleado");
+-                    if(!$this->model->save())
+-                        die(print_r($this->model->getErrors(), true));
+-                }
+-            }
+-
+-            if ($this->model->paso_wf == 'swFacturas/jefatura') {
+-                if($this->model->usuario_actual == -2){
+-                    $this->model->usuario_actual = Yii::app()->user->getState("id_empleado");
+-                    $this->model->save();
+-                }
+-            }
+-
+-
+-            if ($this->model->paso_wf == 'swFacturas/aprobada') {
+-                if($this->model->usuario_actual == -3){
+-                    $this->model->usuario_actual = Yii::app()->user->getState("id_empleado");
+-                    $this->model->save();
+-                }
++            if ($this->model->paso_wf == 'swFacturas/causacion') {
++                $this->model->usuario_actual = Yii::app()->user->getState("id_empleado");
++                $this->model->save();
+             }
+ 
+             if ($this->model->usuario_actual != Yii::app()->user->id_empleado) {
+-                //throw new CHttpException(400, 'El usuario no puede modificar esta orden.');
++                throw new CHttpException(400, 'El usuario no puede modificar esta orden.');
+             } else {
+ //                if($this->model->usuario_actual != Yii::app()->user->id_empleado){
+ //                        throw new CHttpException(400,'El usuario no puede modificar esta orden.');
+@@ -692,47 +674,17 @@
+             Yii::app()->end();
+         }
+     }
+-    public function actionImagenPermiso(){
+-        $path = $_GET['path'];
+-        $tipopath = explode(".",$path);
+-        $tipopath = $tipopath[1];
+-          if(strtolower($tipopath) == "pdf"){
+-            header('Content-Type: application/pdf');
+-          }else{
+-            header('Content-Type: image/jpeg');
+-          }
+-
+-        readfile($path);
+-    }
+-
+-    public function actionAdministrativo(){
+-
+-        $this->layout = '//layouts/listar';
+-        $model = new Facturas('search');
+-        $model->unsetAttributes();  // clear any default values
+-        if (isset($_GET['Facturas']))
+-            $model->attributes = $_GET['Facturas'];
++  public function actionImagenPermiso(){
++    $path = $_GET['path'];
++    $tipopath = explode(".",$path);
++    $tipopath = $tipopath[1];
++      if(strtolower($tipopath) == "pdf"){
++        header('Content-Type: application/pdf');
++      }else{
++        header('Content-Type: image/jpeg');
++      }
+ 
+-        $this->model = $model;
+-        $this->render('administrativo', array(
+-            'model' => $model,
+-        ));
+-    }
++    readfile($path);
++  }
+ 
+-    public function actionDevolverACauasacion(){
+-        //if (Yii::app()->request->isAjaxRequest) {
+-            // we only allow deletion via POST request
+-            //$this->loadModel($id)->delete();
+-            $id = $_GET['id'];
+-            $model = Facturas::model()->findByPk($id);
+-            $model->usuario_actual = -1;
+-            $model->observacion = "Devuelto a Bandeja Común";
+-            if($model->save())
+-                echo CJSON::encode(array('status'=>'success', 'content' => 'Ok Devuelto'));
+-            else
+-                echo CJSON::encode(array('status'=>'success', 'content' => print_r($model->getErrors())));
+-            
+-        //} else
+-        //    throw new CHttpException(400, 'Invalid request. Please do not repeat this request again.');
+-    }
+ }

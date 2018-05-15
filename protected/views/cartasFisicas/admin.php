@@ -6,12 +6,15 @@ $this->breadcrumbs=array(
 $this->setPageTitle('Punteo Cartas Firma Fisica');
 ?>
 <div class="x_title">
-  <h2>Punteo Cartas Firma Fisica</h2>
+	<div class='col-md-12'>
+		<h2>Punteo Cartas Firma Física</h2>
+	</div>
     <ul class="nav navbar-right panel_toolbox">
     </ul>
   <div class="clearfix"></div>
 </div>
-<div class="col-md-12" align="right">
+<br>
+<div class="col-md-1">
 	<?php $this->widget(
     'booster.widgets.TbButton',
     array(
@@ -22,6 +25,11 @@ $this->setPageTitle('Punteo Cartas Firma Fisica');
     )
 );  ?>
 </div>
+<div class='col-md-9'></div>
+<div class='col-md-2'>
+	<?php echo CHtml::activeTextField($model,'buscar',array('class'=>'form-control','maxlength'=>'24','placeholder'=>'Consulta caso...')); ?>
+</div> 
+<br>
 <br>
 <br>
 <div class="panel panel-blue margin-bottom-40">
@@ -29,9 +37,10 @@ $this->setPageTitle('Punteo Cartas Firma Fisica');
 		<?php $this->widget('bootstrap.widgets.BootGridView',array(
 			'id'=>'cartas-fisicas-grid',
 			'dataProvider'=>$model->search(),
+			'ajaxType'=>'POST',
+			'filterSelector'=>'{filter}, #CartasFisicas_buscar, select',
 			'type' => 'striped',
 			'afterAjaxUpdate'=>'function(id, data){$(\'.select-on-check\').on(\'change\',function(e){actualizar(this);});}',
-			//'filter'=>$model,
 			'columns'=>
 				array(
 					array(
@@ -44,33 +53,35 @@ $this->setPageTitle('Punteo Cartas Firma Fisica');
                         ),  
 					),
 			array('header'=>'Caso',
-					'value'=>'$data->idCartas->na',
-					'filter'=> CHtml::textField('na','',array('class'=>'form-control')),
+    			  'value'=>'$data->idCartas->na',
+				  //'filter'=> CHtml::textField('na','',array('class'=>'form-control')),
 				),
 			array('header'=>'Destinatario',
-					'value'=>'$data->idCartas->nombre_destinatario',
-					'filter'=> CHtml::textField('destinatario','',array('class'=>'form-control')),),
+				  'value'=>'$data->idCartas->nombre_destinatario',
+				  'filter'=> CHtml::textField('destinatario','',array('class'=>'form-control')),),
 			array('header'=>'Principal',
-					'value'=>'$data->idCartas->principal',
-					'filter'=> CHtml::dropDownList('principal','',array('Si'=>'Si','No'=>'No'),array('class'=>'form-control','prompt'=>''))),
+				  'value'=>'$data->idCartas->principal',
+				  'filter'=> CHtml::dropDownList('principal','',array('Si'=>'Si','No'=>'No'),array('class'=>'form-control','prompt'=>''))),
 			array('header'=>'Courrier',
-					'value'=>'$data->idCartas->proveedor0->proveedor',
-					'filter'=> CHtml::dropDownList('proveedor','',array('1'=>'Certificado 472','2'=>'Servientrega'),array('class'=>'form-control','prompt'=>''))),
+				  'value'=>'$data->idCartas->proveedor0->proveedor',
+				  'filter'=> CHtml::dropDownList('proveedor','',array('1'=>'Certificado 472','2'=>'Servientrega'),array('class'=>'form-control','prompt'=>''))),
 			array('header'=>'Dirección',
-					'value'=>'$data->direccion',
-					'filter'=> CHtml::textField('direcccion','',array('class'=>'form-control')),),
+				  'value'=>'$data->direccion',
+				  'filter'=> CHtml::textField('direcccion','',array('class'=>'form-control')),),
 			array('header'=>'Tipología',
-					'value'=>'$data->idCartas->na0->tipologia0->tipologia',
-					'filter'=> CHtml::textField('tipologia','',array('class'=>'form-control')),),
+			      'value'=>'$data->idCartas->na0->tipologia0->tipologia',
+				  'filter'=> CHtml::textField('tipologia','',array('class'=>'form-control')),),
 			array('header'=>'Área',
-					'value'=>'$data->idCartas->na0->tipologia0->area0->area',
-					'filter'=> CHtml::textField('area','',array('class'=>'form-control')),),
+				  'value'=>'$data->idCartas->na0->tipologia0->area0->area',
+				  'filter'=> CHtml::textField('area','',array('class'=>'form-control')),),
 			array('header'=>'Fecha',
-					'value'=>'$data->idCartas->na0->fecha_entrega',
-					'filter'=> CHtml::textField('fecha','',array('class'=>'form-control')),),
+				  //'value'=>'$data->idCartas->na0->fecha_entrega',
+				  'value'=>'date("d/m/Y", strtotime($data->idCartas->na0->fecha_entrega))',
+				  'filter'=> CHtml::textField('fecha','',array('class'=>'form-control')),),
 			array('header'=>'Hora',
-					'value'=>'$data->idCartas->na0->hora_entrega',
-					'filter'=> CHtml::textField('hora','',array('class'=>'form-control')),),
+				  //'value'=>'$data->idCartas->na0->hora_entrega',
+				  'value'=>'date("h:i a", strtotime($data->idCartas->na0->hora_entrega))',
+				  'filter'=> CHtml::textField('hora','',array('class'=>'form-control')),),
 				array(
 					'class'=>'bootstrap.widgets.BootButtonColumn',
 				),
@@ -121,11 +132,16 @@ $this->setPageTitle('Punteo Cartas Firma Fisica');
     ); ?>
 </div>
 <?php $this->endWidget(); ?>
+<iframe id="excel1" class="oculto"></iframe>
+<iframe id="excel2" class="oculto">></iframe>
 <script type="text/javascript">
 	$(document).ready(function(){
 		$('.select-on-check').on('change',function(e){
 			actualizar(this);
 		});
+		$('#CartasFisicas_buscar').keyup(function (){
+        	this.value = (this.value + '').replace(/[^0-9]/g, '');
+    	});
 	});
 	function actualizar(selector){
 		var id = selector.value;
@@ -154,14 +170,17 @@ $this->setPageTitle('Punteo Cartas Firma Fisica');
 	    );?>
 	}
 	$("#punteo_exel").click(function(){
-		<?php echo CHtml::ajax(
+		<?php 
+			
+			echo CHtml::ajax(
 	      array(
 	        'type' => 'POST',
 	        'url' => $this->createUrl("consultaRegistros"),
 	        'success' => 'function(res){
 	        	if(res != ""){
 	        		if(confirm("¿Desea descargar informe punteados?")){
-	        			location.href="http://"+document.domain+"/correspondencia/index.php/cartasFisicas/punteoExcel";
+						$("#excel1").attr("src", \''.$this->createUrl("cartasFisicas/punteoExcel").'\').load();
+						$("#excel2").attr("src", \''.$this->createUrl("cartasFisicas/punteoExcel472").'\').load();
 	        		}
 	        	}else{
 	        		$("#modal-prerrequisito").modal("show");
@@ -171,23 +190,6 @@ $this->setPageTitle('Punteo Cartas Firma Fisica');
 	    );?>
 	});
 </script>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
 <br>
 <br>
 <br>

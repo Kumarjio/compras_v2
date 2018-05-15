@@ -32,7 +32,7 @@ class RolesController extends Controller
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('create','update','admin','inhabilitar','valida'),
+				'actions'=>array('create','update','admin','inhabilitar','valida','habilitar'),
 				'users'=>array('@'),
 			),
 			array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -216,6 +216,18 @@ class RolesController extends Controller
 		$model->activo = false;
 		if($model->save()){
 			die("<h5 align='center'>Rol Inhabilitado.</h5>");
+		}else{
+			die;
+		}
+
+	}
+	public function actionHabilitar()
+	{
+		$id = $_POST['id'];
+		$model=Roles::model()->findByPk($id);
+		$model->activo = true;
+		if($model->save()){
+			die("<h5 align='center'>Rol Habilitado.</h5>");
 		}else{
 			die;
 		}

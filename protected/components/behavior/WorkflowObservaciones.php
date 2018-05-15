@@ -16,16 +16,13 @@ class WorkflowObservaciones extends CActiveRecordBehavior {
         if(isset($this->Owner->observacion) && !empty($this->Owner->observacion)){
 //            if (!$this->Owner->isNewRecord) {                
                   
-              $log = new Observacioneswfs;
+              $log = new ObservacionesWfs;
 
               $log->model = get_class($this->Owner);
               $log->idmodel = $this->Owner->getPrimaryKey();
-              $log->usuario = $newattributes['id_usuario'];
+              $log->usuario = $oldattributes['usuario_actual'];
 
-              if(empty($oldattributes['paso_wf']))
-                $log->estado_anterior = "swCita/preagendado";
-              else
-                $log->estado_anterior = $oldattributes['paso_wf'];
+              $log->estado_anterior = $oldattributes['paso_wf'];
 
               $log->estado_nuevo = $newattributes['paso_wf'];
               $log->observacion = $this->Owner->observacion;

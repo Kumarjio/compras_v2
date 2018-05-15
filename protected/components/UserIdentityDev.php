@@ -38,12 +38,38 @@ class UserIdentityDev extends CUserIdentity
 
 	
 	private function cargarCedula($userid){
+	  
 	    $this->setState("id_empleado", $userid);
+	   
 	}
 	
 	private function asignarRol($permisos){
-		if(in_array('VIA0999', $permisos)){
-			$this->setState('secretaria', true);
+		if(in_array('CYC991', $permisos)){
+			$this->setState('jefe', true);
+		}
+		if(in_array('CYC992', $permisos)){
+			$this->setState('gerente', true);
+		}
+		if(in_array('CYC993', $permisos)){
+			$this->setState('presidencia', true);
+		}
+		if(in_array('CYC990', $permisos)){
+			$this->setState('junta', true);
+		}
+		if(in_array('CYC994', $permisos)){
+			$this->setState('jefe_compras', true);
+		}
+		if(in_array('CYC995', $permisos)){
+			$this->setState('comite_compras', true);
+		}
+		if(in_array('CYC996', $permisos)){
+			$this->setState('analista_compras', true);
+		}
+		if(in_array('CYC989', $permisos)){
+			$this->setState('contratacion', true);
+		}
+		if(in_array('CYC997', $permisos)){
+			$this->setState('vicepresidente', true);
 		}
     
 	}

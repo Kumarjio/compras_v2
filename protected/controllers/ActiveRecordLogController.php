@@ -33,7 +33,7 @@ class ActiveRecordLogController extends Controller
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('create','update','admin','form'),
+				'actions'=>array('create','update','admin'),
 				'users'=>array('@'),
 			),
 			array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -172,7 +172,7 @@ class ActiveRecordLogController extends Controller
 	{
 		$model=ActiveRecordLog::model()->findByPk($id);
 		if($model===null)
-			throw new CHttpException(404,'El registro que está buscando no existe.');
+			throw new CHttpException(404,'The requested page does not exist.');
 		return $model;
 	}
 

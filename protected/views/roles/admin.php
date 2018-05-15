@@ -1,5 +1,7 @@
 <div class="x_title">
-  <h2>Roles</h2>
+	<div class='col-md-12'>
+		<h2>Roles</h2>
+	</div>
     <ul class="nav navbar-right panel_toolbox">
     </ul>
   <div class="clearfix"></div>
@@ -11,10 +13,14 @@
 			'buttonType'=>'submit', 
 			'type'=>'primary',
 			'icon'=>'glyphicon glyphicon-user',
-			'label'=>$model->isNewRecord ? 'Nuevo Rol' : 'Guardar',
+			'label'=>'Nuevo Rol',
       		'htmlOptions' => array('id'=>'crear_rol'), 
 		)); ?>
 	</div>
+</div>
+<div class='col-md-9'></div>
+<div class='col-md-2'>
+	<?php echo CHtml::activeTextField($model,'buscar',array('class'=>'form-control','maxlength'=>'24','placeholder'=>'Consulta rol...')); ?>
 </div>
 <div class="row">
 </div>
@@ -24,9 +30,16 @@
 	'id'=>'rol-grid',
 	'dataProvider'=>$model->search(),
 	//'filter'=>$model,
+	'filterSelector'=>'{filter}, #Roles_buscar, select',
 	'type' => 'striped bordered condensed',
+	'responsiveTable' => true,
 	'columns'=>array(
-		array('name'=>'roles','value'=>'$data->rol'),
+		array('name'=>'rol','value'=>'ucwords(strtolower($data->rol))'),
+		array(
+			'header'=>'Permisos',
+			'type'=>'raw',
+			'value'=>'$data->getPermisos()'
+		),
 		array(
 		'header'=>'Modificar',	
 	    'class'=>'booster.widgets.TbButtonColumn',
@@ -37,10 +50,11 @@
 	          'url'=>'$data->id',
 	          'icon'=>'glyphicon glyphicon-pencil',
 	          'click'=> 'js:function(){return update_roles(this);}',
+			  'options'=>array('style'=> 'font-size: 1.3em;'),
 	      ),
 	    )
 	  ),
-		array(
+		/*array(
 		'header'=>'Permisos',	
 	    'class'=>'booster.widgets.TbButtonColumn',
 	    'template'=>'{permisos}',
@@ -50,20 +64,31 @@
 	          'url'=>'$data->id',
 	          'icon'=>'glyphicon glyphicon-eye-open',
 	          'click'=> 'js:function(){return permisos(this);}',
+			  'options'=>array('style'=> 'font-size: 1.3em;'),
 	      ),
 	    )
-	  ),
+	  ),*/
 	  array(
-		'header'=>'Inhabilitar',	
+		'header'=>'Habilitar / Inhabilitar',	
 	    'class'=>'booster.widgets.TbButtonColumn',
-	    'template'=>'{inhabilitar}',
+	    'template'=>'{inhabilitar}{habilitar}',
 	    'buttons' => array(
 	    	'inhabilitar' => array(
 	          'label'=>'Inhabilitar',
 	          'url'=>'$data->id',
+	          'visible' => '$data->activo',
 	          'icon'=>'glyphicon glyphicon-remove',
 	          'click'=> 'js:function(){return validacion(this);}',
+			  'options'=>array('style'=> 'font-size: 1.3em;'),
 	      ),
+	     	'habilitar' => array(
+	          'label'=>'Habilitar',
+	          'url'=>'$data->id',
+	          'visible' => '!$data->activo',
+	          'icon'=>'glyphicon glyphicon-ok',
+	          'click'=> 'js:function(){return habilitar(this);}',
+			  'options'=>array('style'=> 'font-size: 1.3em;'),
+	      ),	
 	    )
 	  ),			
 	),
@@ -161,20 +186,72 @@ function validacion(id){
     return false;
 }
 function inhabilitar(id){
-    <?php echo CHtml::ajax(
-	    array(
-	      'type' => 'POST',
-	      'data' => array('id' => 'js:id'),
-	      'url' => $this->createUrl("inhabilitar"),
-	      'success' => 'function(res){
-	      	if(res){
-	      		$("#dialogo-rol #body-rol").html(res);
-	        	$("#dialogo-rol").modal("show");
-	        	$("#rol-grid").yiiGridView.update("rol-grid");
-	      	}
-	      }'
-	    )
-	);?>
+	bootbox.confirm({
+	    message: "<h4>¿Esta seguro de Inhabilitar este Rol?</h4>",
+	    buttons: {
+	        confirm: {
+	            label: "Confirmar",
+	            className: "btn-primary"
+	        },
+	        cancel: {
+	            label: "Cancelar",
+	            className: "btn-default"
+	        }
+	    },
+	    callback: function (confirm) {
+		    if(confirm){
+			    <?php echo CHtml::ajax(
+				    array(
+				      'type' => 'POST',
+				      'data' => array('id' => 'js:id'),
+				      'url' => $this->createUrl("inhabilitar"),
+				      'success' => 'function(res){
+				      	if(res){
+				      		$("#dialogo-rol #body-rol").html(res);
+				        	$("#dialogo-rol").modal("show");
+				        	$("#rol-grid").yiiGridView.update("rol-grid");
+				      	}
+				      }'
+				    )
+				);?>
+		    }
+	    }
+	});	
+    return false;
+}
+function habilitar(id){
+	var id = $(id).attr("href");
+	bootbox.confirm({
+	    message: "<h4>¿Esta seguro de Habilitar este Rol?</h4>",
+	    buttons: {
+	        confirm: {
+	            label: "Confirmar",
+	            className: "btn-primary"
+	        },
+	        cancel: {
+	            label: "Cancelar",
+	            className: "btn-default"
+	        }
+	    },
+	    callback: function (confirm) {
+		    if(confirm){
+			    <?php echo CHtml::ajax(
+				    array(
+				      'type' => 'POST',
+				      'data' => array('id' => 'js:id'),
+				      'url' => $this->createUrl("habilitar"),
+				      'success' => 'function(res){
+				      	if(res){
+				      		$("#dialogo-rol #body-rol").html(res);
+				        	$("#dialogo-rol").modal("show");
+				        	$("#rol-grid").yiiGridView.update("rol-grid");
+				      	}
+				      }'
+				    )
+				);?>
+			}
+		}
+	});	
     return false;
 }
 </script>

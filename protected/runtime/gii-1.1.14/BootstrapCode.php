@@ -1,5 +1,5 @@
 <?php
 return array (
-  'template' => 'viajes',
+  'template' => 'default',
   'baseControllerClass' => 'Controller',
 );

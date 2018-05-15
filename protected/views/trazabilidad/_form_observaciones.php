@@ -7,7 +7,7 @@ $form=$this->beginWidget('bootstrap.widgets.BootActiveForm',array(
 	'id'=>'form-observacion',
 	'enableAjaxValidation'=>false,
 	'htmlOptions' => array(
-		'onsubmit'=> 'jQuery.ajax({\'url\':\'/correspondencia/index.php/trazabilidad/observacionesTrazabilidad\',\'dataType\':\'json\',\'data\':$(this).serialize(),\'type\':\'post\',\'success\':function(data){if(data.status == \'success\'){$(\'#modal-observacion-trazabilidad\').modal(\'hide\');}else{	$(\'#body-observacion\').html(data.content);}},\'cache\':false});return false;'
+		'onsubmit'=> 'jQuery.ajax({\'url\':\''.Yii::app()->createUrl('trazabilidad/observacionesTrazabilidad').'\',\'dataType\':\'json\',\'data\':$(this).serialize(),\'type\':\'post\',\'success\':function(data){if(data.status == \'success\'){$(\'#modal-observacion-trazabilidad\').modal(\'hide\');}else{	$(\'#body-observacion\').html(data.content);}},\'cache\':false});return false;'
 	)
 ));
 

@@ -32,7 +32,7 @@ class TrazabilidadController extends Controller
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('create','update', 'retomarCaso','pendientes','reasignar','adjuntar','upload'),
+				'actions'=>array('create','update', 'retomarCaso','pendientes','reasignar','adjuntar','upload','download','visorImagenesTif','retomar','cambiarTipologia'),
 				'users'=>array('@'),
 			),
 			array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -120,18 +120,36 @@ class TrazabilidadController extends Controller
 	/**
 	 * Lists all models.
 	 */
-	public function actionIndex()
-	{
+	public function actionIndex(){
+		$obserTrazabilidad=new ObservacionesTrazabilidad('search');
+		if(isset($_GET['ObservacionesTrazabilidad'])){
+			$obserTrazabilidad->attributes = $_GET['ObservacionesTrazabilidad'];
+		}
 		if($_GET["na"]){
-			$model = new Trazabilidad;
+			$aux = true;
 			$na = base64_decode($_GET["na"]);
-			$recepcion = Recepcion::model()->informacionRecepcion($na);
-			$trazabilidad = Trazabilidad::model()->informacionTrazabilidad($na);
+			if(is_numeric($na)){
+				$recepcion = Recepcion::model()->findByPk($na);
+				if(!$recepcion){
+					$aux = false;
+				}
+			}else{
+				$aux = false;
+			}
+		}else{
+			$aux = false;
+		}
+		if($aux){
+			$model = new Trazabilidad('search_detalle');
+			$recepcion=Recepcion::model()->findByPk($na);
+			//$trazabilidad = Trazabilidad::model()->informacionTrazabilidad($na);
 			$tipologia = Tipologias::model()->informacionTipologia($recepcion->tipologia);
 			$empresa = EmpresaPersona::model()->informacionEmpresa($recepcion->documento);
 			$poliza = PolizaEmpresa::model()->informacionPoliza($recepcion->documento);
-			$sucursal = SucursalRecepcion::model()->informacionSucursal($na);
-			$observacion = ObservacionRecepcion::model()->informacionObservacion($na);
+			$sucursal=SucursalRecepcion::model()->findByPk($na);
+			//$observacion = ObservacionesTrazabilidad::informacionObservacion($na);
+			//$adjuntos = AdjuntosTrazabilidad::adjuntosConsulta($na);
+			$mail = MailRecepcion::getMail($na);
 			$this->render('index',array(
 				'model'=>$model,
 				'recepcion'=>$recepcion,
@@ -140,13 +158,15 @@ class TrazabilidadController extends Controller
 				'empresa'=>$empresa,
 				'poliza'=>$poliza,
 				'sucursal'=>$sucursal,
-				'observacion'=>$observacion,
+				//'observacion'=>$observacion,
+				//'adjuntos'=>$adjuntos,
+				'mail'=>$mail,
+				'obserTrazabilidad'=>$obserTrazabilidad
 			));
 		}else{
-			$this->render('index');
+			$this->redirect($this->createUrl('error/index'));
 		}
 	}
-
 	/**
 	 * Manages all models.
 	 */
@@ -220,10 +240,11 @@ class TrazabilidadController extends Controller
 		}
 	}
 	public function actionPendientes(){
-		$model=new Trazabilidad('search');
+		$model=new Trazabilidad('search_pendientes');
 		$model->unsetAttributes();  // clear any default values
-		if(isset($_GET['Trazabilidad']))
-			$model->attributes=$_GET['Trazabilidad'];
+		if(isset($_POST['Trazabilidad'])){
+			$model->attributes=$_POST['Trazabilidad'];
+		}
 
 		$this->render('_pendientes',array(
 			'model'=>$model,
@@ -238,8 +259,18 @@ class TrazabilidadController extends Controller
 			}else{
 				if(isset($_POST['Trazabilidad'])){
 					$model=Trazabilidad::model()->findByPk($_POST['Trazabilidad']['id']);
+					//$observacion = new ObservacionesTrazabilidad;
+					//$observacion->observacion = "Se ha reasignado la actividad del usuario ".Usuario::model()->nombres($model->user_asign)." para el usuario ".Usuario::model()->nombres($_POST['Trazabilidad']['user_asign']).".";
 					$model->attributes=$_POST['Trazabilidad'];
-					if(!$model->save()){
+					if($model->save()){
+						$observacion = new ObservacionesTrazabilidad;
+						$observacion->observacion = "Se ha reasignado la actividad a el usuario ".Usuario::model()->nombres($model->user_asign).".";
+						$observacion->id_trazabilidad = $model->id;
+						$observacion->usuario = Yii::app()->user->usuario;
+						$observacion->na = $model->na;
+						$observacion->save();
+						Actividades::notificacion($model->id, $model->user_asign);
+					}else{
 						$aux = false;
 					}
 				}
@@ -271,23 +302,34 @@ class TrazabilidadController extends Controller
 					$extension = $separador["1"];
 					$nombre = "ADJ".Yii::app()->db->createCommand("SELECT nextval('concecutivos_adjuntos_seq')")->queryScalar();
 					$path = "/vol2/img04/arp/".date("Ymd")."/".$model->na."/";
-					$ruta_nueva = $path.$nombre;
+					$ruta_nueva = $path;
 					if(!file_exists($path)){
-						exec("mkdir -p $path; sudo chmod 775 -R $path", $output, $return_var);
+						exec("mkdir -p $path; sudo chmod 777 -R $path", $output, $return_var);
 					}
-					if($extension == "png" || $extension == "tif" || $extension == "tiff"){
+					/*if($extension == "png" || $extension == "tif" || $extension == "tiff"){
+						$ruta_jpg = $path;
+						print_r($ruta_jpg);
+						die;
 						exec("convert $ruta $ruta_nueva.'jpg'", $output, $return_var);
 						$extension = "jpg";
-					}else{
-						exec("mv $ruta $ruta_nueva".".".$extension);
+					}else{*/
+					$nombre_tmp = dirname($ruta)."/";
+					if(file_exists($nombre_tmp)){
+						//exec("mv $ruta $nombre_tmp".$nombre.".".$extension);
+						rename($ruta, $nombre_tmp.$nombre.".".$extension);
 					}
+					$ruta = $nombre_tmp.$nombre.".".$extension;
+					if(file_exists($ruta_nueva)){
+						exec("mv $ruta $ruta_nueva".$nombre.".".$extension);
+					}
+					//}
 					if(file_exists($ruta)){
 						exec("rm $ruta", $output, $return_var);
 						if(file_exists($directorio)){
 							exec("rmdir $directorio", $output, $return_var);
 						}
 					}
-					$model->path = $ruta_nueva.".".$extension;
+					$model->path = $ruta_nueva.$nombre.".".$extension;
 					$model->path = str_replace("/vol2","http://".$_SERVER['HTTP_HOST'],$model->path);
 					$model->usuario = Yii::app()->user->usuario;
 					$model->save();
@@ -314,7 +356,7 @@ class TrazabilidadController extends Controller
             //@mkdir($tempFolder.'chunks', 0777, TRUE);
             Yii::import("ext.EFineUploader.qqFileUploader");
             $uploader = new qqFileUploader();
-            $uploader->allowedExtensions = array('jpg','jpeg','png','pdf','xls','csv','msg','tif');
+            $uploader->allowedExtensions = array('jpg','jpeg','png','pdf','xls','csv','msg','tif','xlsx','msg');
             $uploader->sizeLimit = 2 * 1024 * 1024;//maximum file size in bytes
             $uploader->chunksFolder = $tempFolder.'chunks';
 
@@ -329,4 +371,87 @@ class TrazabilidadController extends Controller
             echo $result;
             Yii::app()->end();
     }
+    public function actionDownload()
+    {
+		if($_REQUEST['path']){
+			$path = $_REQUEST['path'];
+			$nombre = basename($path);
+			$path = str_replace("http://correspondencia.imaginex/", "/vol2/", $path); 
+			header ("Content-type: octet/stream");
+			header ("Content-disposition: attachment; filename=".$nombre.";");
+			header("Content-Legth: ".filesize($path));
+			readfile($path);
+			exit;	
+		}
+    }
+    public function actionVisorImagenesTif()
+    {
+		//$this->render('visor');
+		if(Yii::App()->request->isAjaxRequest){
+			if($_REQUEST['path']){
+				$path = $_REQUEST['path'];
+				echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('visor', array('path' => $path), true, true)));	
+			}
+		}
+    }
+    public function actionRetomar()
+    {
+		if(Yii::App()->request->isAjaxRequest){
+			if($_POST['id']){
+				$model = Trazabilidad::model()->findByPk($_POST['id']);
+				$observacion = new ObservacionesTrazabilidad;
+				$observacion->observacion = "Se ha retomado la actividad del usuario ".Usuario::model()->nombres($model->user_asign).".";
+				$model->user_asign = Yii::app()->user->usuario;
+				if($model->save()){
+					$observacion->id_trazabilidad = $model->id;
+					$observacion->usuario = Yii::app()->user->usuario;
+					$observacion->na = $model->na;
+					$observacion->save();
+					echo CJSON::encode(array('status'=>'success', 'content' => "<h5>Actividad Retomada.</h5>"));
+				}else{
+					echo CJSON::encode(array('status'=>'error', 'content' => "<h5 align='center' class='red'>Error al retomar el caso.</h5>" ));
+				}
+			}
+		}
+    }
+    public function actionCambiarTipologia()
+    {
+		if(Yii::App()->request->isAjaxRequest){
+			$aux = true;
+			if(isset($_POST['Recepcion'])){
+				$model=Recepcion::model()->findByPk($_POST['Recepcion']['na']);
+				$observacion = new ObservacionesTrazabilidad;
+				$observacion->observacion = "Se ha cambiado la tipologia ".ucwords(strtolower($model->tipologia0->tipologia)).".";
+				$trazabilidad = Trazabilidad::model()->findByPk($_POST['Trazabilidad']['id']);
+				$model->attributes=$_POST['Recepcion'];
+				if($_POST['Recepcion']['tipologia']){
+					$area =	Tipologias::model()->findByAttributes(array("id"=>$_POST['Recepcion']['tipologia']));
+					$model->area = $area->area;
+				}
+				if($model->save()){
+					$observacion->id_trazabilidad = $trazabilidad->id;
+					$observacion->usuario = Yii::app()->user->usuario;
+					$observacion->na = $model->na;
+					$observacion->save();
+					trazabilidad::model()->updateAll(array('estado'=>'2','user_cierre'=>Yii::app()->user->usuario,'fecha_cierre'=>"'now()'"),'na ='.$model->na.'AND user_cierre IS NULL');
+					$getActividad = trazabilidad::model()->with( array('actividad0'=>array("alias"=>"a",'condition'=>'a.id_actividad = 1')))->findByAttributes(array("na"=>$model->na));
+					$nuevaActividad = ActividadTipologia::model()->findByAttributes(array("id_tipologia"=>$model->tipologia, "id_actividad"=>"1"));
+					trazabilidad::model()->updateAll(array('actividad'=>$nuevaActividad->id),'id ='.$getActividad->id);
+					Actividades::model()->abrirActividad($model->na,$nuevaActividad->id,$getActividad->id);
+				}else{
+					$aux = false;
+				}
+			}else{
+				$id = $_POST['id'];
+				$trazabilidad = Trazabilidad::model()->findByPk($id);
+				$model = Recepcion::model()->findByPk($trazabilidad->na);
+			}
+			if($aux){
+				echo CJSON::encode(array('status'=>'success', 'content' => $this->renderPartial('_cambioTipologia', array('model' => $model,'trazabilidad'=>$trazabilidad), true, true)));
+			}else{
+				echo CJSON::encode(array('status'=>'error', 'content' => $this->renderPartial('_cambioTipologia', array('model' => $model,'trazabilidad'=>$trazabilidad), true, true)));
+			}
+		}
+    }
+
 }

@@ -8,7 +8,7 @@ return array(
 	'name'=>'Imagine',
 	'language' => 'es',
 	//'defaultController' => 'paciente/paciente/create',
-	'defaultController' => 'site/index',
+	'defaultController' => 'orden/admin',
 	// preloading 'log' component
 	'preload'=>array('log','bootstrap','yiibooster'),
 	// autoloading model and component classes
@@ -22,16 +22,21 @@ return array(
         'application.extensions.tinymce.*',
         'application.extensions.xheditor.*',
         'application.extensions.EExcelView.*',
+        'ext.pdffactory.*',
+        'application.pdf.docs.*',
+        'application.modules.facturacion.models.*'
 	),
 	'modules'=>array(
 		// uncomment the following to enable the Gii tool
 		//'administracion',
+		'facturacion',
+		'reportico' => array(),
 		'gii'=>array(
 			'class'=>'system.gii.GiiModule',
 			'password'=>'imagine2017*',
 			'ipFilters'=>array('*'),
 			'generatorPaths'=>array(
-				'ext.bootstrap.gii',
+				'ext.yiibooster.gii',
 			),
 		),
 	),
@@ -43,7 +48,7 @@ return array(
 		'user'=>array(
 			// enable cookie-based authentication
 			'allowAutoLogin'=>false,
-			'loginRequiredAjaxResponse' => 'Inicio de sesión necesario'
+			//'loginRequiredAjaxResponse' => 'Inicio de sesión necesario'
 		),
 		'metadata'=>array('class'=>'Metadata'),
 		'bootstrap'=>array(
@@ -65,6 +70,21 @@ return array(
 		'EExcelView'=> array(
 			'class'=>'application.extensions.EExcelView.EExcelView',
 		),
+		'dompdf'=>array(
+			'class'=>'ext.yiidompdf.yiidompdf',
+		),
+		'ePdf' => array(
+	        'class' => 'ext.yii-pdf.EYiiPdf',
+	        'params' => array(
+	            'mpdf' => array(
+	                'librarySourcePath' => 'application.vendors.mpdf.*',
+	                'constants'         => array(
+	                    '_MPDF_TEMP_PATH' => Yii::getPathOfAlias('application.runtime'),
+	                ),
+	                'class'=>'mpdf',
+	            ),
+	        ),
+	    ),
 		// uncomment the following to enable URLs in path-format
 		'urlManager'=>array(
 			'urlFormat'=>'path',
@@ -72,9 +92,9 @@ return array(
         ),
 		'db'=>array(
 			'class'=>'CDbConnection',
-			'connectionString'=>'pgsql:host=127.0.0.1;port=5432;dbname=correspondencia',
-			'username' => 'intranet',
-			'password' => 'intranet',
+			'connectionString'=>'pgsql:host=127.0.0.1;port=5432;dbname=workflow',
+			'username' => 'postgres',
+			'password' => 'imagineLinux2017*',
 			'schemaCachingDuration'=>86400, 
 		),
 		/*

@@ -1,0 +1,29 @@
+--- modules/facturacion/views/facturas/_form_resp.php
++++ modules/facturacion/views/facturas/_form_resp.php
+@@ -43,7 +43,7 @@
+                                     (
+                                     'delete' => array
+                                         (
+-                                        'visible' => ($this->getAction()->getId()=='view')?'false': '$data->permitirEliminar()'
++                                        'visible' => '$data->permitirEliminar()'
+                                     )
+                                 ),
+                                 'afterDelete' => 'function(link, success, data){ if(success){  $(\'#proveedores-seleccion-grid\').yiiGridView.update(\'proveedores-seleccion-grid\'); }}',
+@@ -182,7 +182,7 @@
+                                     (
+                                     'delete' => array
+                                         (
+-                                        'visible' => ($this->getAction()->getId()=='view')?'false':'$data->permitirEliminar()'
++                                        'visible' => '$data->permitirEliminar()'
+                                     )
+                                 ),
+                                 //'afterDelete' => 'function(link, success, data){ if(success){  $(\'#proveedores-seleccion-grid\').yiiGridView.update(\'proveedores-seleccion-grid\'); }}',
+@@ -235,7 +235,7 @@
+                                     (
+                                     'delete' => array
+                                         (
+-                                        'visible' => ($this->getAction()->getId()=='view')?'false':'$data->permitirEliminar()'
++                                        'visible' => '$data->permitirEliminar()'
+                                     )
+                                 ),
+                                 //'afterDelete' => 'function(link, success, data){ if(success){  $(\'#proveedores-seleccion-grid\').yiiGridView.update(\'proveedores-seleccion-grid\'); }}',

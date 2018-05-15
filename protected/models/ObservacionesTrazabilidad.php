@@ -99,6 +99,23 @@ class ObservacionesTrazabilidad extends CActiveRecord
 		));
 	}
 
+	public function search_todas($na)
+	{
+		// @todo Please modify the following code to remove attributes that should not be searched.
+
+		$criteria=new CDbCriteria;
+
+		$criteria->compare('id',$this->id);
+		$criteria->compare('id_trazabilidad',$this->id_trazabilidad,true);
+		$criteria->compare('observacion',$this->observacion,true);
+		$criteria->compare('fecha',$this->fecha,true);
+		$criteria->compare('usuario',$this->usuario,true);
+		$criteria->compare('na',$na);
+
+		return new CActiveDataProvider($this, array(
+			'criteria'=>$criteria,
+		));
+	}
 	/**
 	 * Returns the static model of the specified AR class.
 	 * Please note that you should have this exact method in all your CActiveRecord descendants!
@@ -123,5 +140,9 @@ class ObservacionesTrazabilidad extends CActiveRecord
 			'criteria'=>$criteria,
 			'pagination' => false
 		));
+	}
+	public static function informacionObservacion($na)
+	{
+		return ObservacionesTrazabilidad::model()->findByAttributes(array("na"=>$na));
 	}
 }

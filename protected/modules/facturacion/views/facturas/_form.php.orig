@@ -1,0 +1,529 @@
+<?php $form=$this->beginWidget('bootstrap.widgets.BootActiveForm',array(
+	'id'=>'facturas-form',
+	'enableAjaxValidation'=>false,
+        'clientOptions'=>array(
+            ''
+        )
+)); ?>
+<!--	<div class="alert alert-block alert-warning fade in">
+		<a class="close" data-dismiss="alert">×</a>
+		<strong>Recuerde!</strong> 
+		Los campos marcados con <span class="required">*</span> son obligatorios.
+	</div>-->
+        <div class='row'>
+            <div class='span5'>
+                <?php echo $form->errorSummary($model); ?>
+                
+                <?php if(($model->paso_wf == 'swFacturas/causacion' && !$model->hasErrors()) || ($model->paso_wf =='swFacturas/enviar_fra' && $model->hasErrors()) || 
+                        ($model->paso_wf == 'swFacturas/enviar_fra' && !$model->hasErrors()) || ($model->paso_wf =='swFacturas/jefatura' && $model->hasErrors())): ?>
+                    <?php 
+                            $this->widget('bootstrap.widgets.BootGridView',array(
+                                'id'=>'ordenes-factura-grid',
+                                'dataProvider'=> OrdenesFactura::model()->search($model->id_factura),
+                                'type'=>'striped bordered condensed',
+                                'ajaxUpdateError' => 'function(xhr){if(xhr.status == 400){alert("No se pudo eliminar el registo. Por favor verifique que no tenga ningun otro registro asociado.")}else{alert("Hay un error en los datos ingresados para la búsqueda. Por favor valide.")}}',
+                                'columns'=>array(
+                                    'id_orden',
+                                    array(
+                                        'header'=>'Cuentas Contables',
+                                        'type'=>'raw',
+                                        'value'=>'$data->getCuentasContables()'
+                                    ),
+                                    array(
+                                        'class'=>'bootstrap.widgets.BootButtonColumn',
+                                        'template' => '',
+                                        'afterDelete' => 'function(link, success, data){ if(success){  $(\'#proveedores-seleccion-grid\').yiiGridView.update(\'proveedores-seleccion-grid\'); }}',
+                                        'deleteButtonUrl'=>'Yii::app()->createUrl(\'facturacion/facturas/deleteOrden/id/\'. $data->id_ordenes_factura)',
+                                ),
+                              ),
+                            )); ?>
+                    
+                    <?php echo $this->renderPartial('_view_parcial',array('model'=>$model)) ?>
+                    <div class="well">
+                    <?php $modificar  = (($model->paso_wf == 'swFacturas/causacion' || $model->paso_wf == 'swFacturas/devolver_causacion') && !$model->hasErrors()) || ($model->paso_wf =='swFacturas/enviar_fra' && $model->hasErrors()); ?>
+                    
+                    <?php if($modificar): ?>
+
+                            
+                            <?php $this->widget('bootstrap.widgets.BootButton', array(
+                                                                'label'=>'Agregar Cuenta Contable',
+                                                                'url'=>'#myModalContable',
+                                                                'type'=>'primary',
+                                                                'htmlOptions'=>array('data-toggle'=>'modal', 'style' => 'margin:-9px 0px 0px 35px; '),
+                                                            )); ?>
+                    
+                    <?php  endif; ?>        
+                            <?php 
+                            $this->widget('bootstrap.widgets.BootGridView',array(
+                              'id'=>'contable-factura-grid2',
+                              'dataProvider'=> CuentasFacturas::model()->search($model->id_factura),
+                              'type'=>'striped bordered condensed',
+                                  'ajaxUpdateError' => 'function(xhr){if(xhr.status == 400){alert("No se pudo eliminar el registo. Por favor verifique que no tenga ningun otro registro asociado.")}else{alert("Hay un error en los datos ingresados para la búsqueda. Por favor valide.")}}',
+                              'columns'=>array(
+                                    array(
+                                        'name'=>'id_cuenta',
+                                        'value'=>'$data->idCuentaContable->codigo'
+                                    ),
+                                    array(
+                                        'header'=>'Nombre',
+                                        'value'=>'$data->idCuentaContable->nombre'
+                                    ),
+                                    array(
+                                        'class'=>'bootstrap.widgets.BootButtonColumn',
+                                        'template' => '{delete}',
+                                        'buttons'=>array
+                                                  (
+                                                    'delete' => array
+                                                        (
+                                                            'visible'=>'$data->permitirEliminarCaus()'
+                                                        )
+                                                ),
+                                        
+                                        //'afterDelete' => 'function(link, success, data){ if(success){  $(\'#proveedores-seleccion-grid\').yiiGridView.update(\'proveedores-seleccion-grid\'); }}',
+                                        'deleteButtonUrl'=>'Yii::app()->createUrl(\'facturacion/facturas/deleteCuenta/id/\'. $data->id_cuenta_factura)',
+                                ),
+                              ),
+                            )); ?>
+                        
+                        
+                          
+                            
+                            </div>
+
+                 
+                <?php else: ?>
+                    <?php //echo $form->textFieldRow($model,'id_orden',array('class'=>'span5','readonly'=>true)); ?>
+                <?php $modificar_campos =  ($model->paso_wf == 'swFacturas/aprobar_jefe' || $model->paso_wf == 'swFacturas/devolver_aprobar_jefe');?> 
+                    <div class="well">
+                    <br/>
+                            <?php $this->widget('bootstrap.widgets.BootButton', array(
+                                                                'label'=>'Agregar Orden de Compra',
+                                                                'url'=>'#myModalOrden',
+                                                                'type'=>'primary',
+                                                                'htmlOptions'=>array('data-toggle'=>'modal', 'style' => 'margin:-9px 0px 0px 35px; '),
+                                                            )); ?>
+
+                            <?php 
+                            $this->widget('bootstrap.widgets.BootGridView',array(
+                              'id'=>'ordenes-factura-grid',
+                              'dataProvider'=> OrdenesFactura::model()->search($model->id_factura),
+                              'type'=>'striped bordered condensed',
+                                  'ajaxUpdateError' => 'function(xhr){if(xhr.status == 400){alert("No se pudo eliminar el registo. Por favor verifique que no tenga ningun otro registro asociado.")}else{alert("Hay un error en los datos ingresados para la búsqueda. Por favor valide.")}}',
+                              'columns'=>array(
+                                    'id_orden',
+                                    array(
+                                        'header'=>'Cuentas Contables',
+                                        'type'=>'raw',
+                                        'value'=>'$data->getCuentasContables()'
+                                    ),
+                                    array(
+                                        'class'=>'bootstrap.widgets.BootButtonColumn',
+                                        'template' => '{delete}',
+                                        'afterDelete' => 'function(link, success, data){ if(success){  $(\'#proveedores-seleccion-grid\').yiiGridView.update(\'proveedores-seleccion-grid\'); }}',
+                                        'deleteButtonUrl'=>'Yii::app()->createUrl(\'facturacion/facturas/deleteOrden/id/\'. $data->id_ordenes_factura)',
+                                ),
+                              ),
+                            )); ?>
+                            </div>
+            
+                    <?php echo $form->labelEx($model,'nit_proveedor'); ?>
+                    <?php 
+                            $this->widget('zii.widgets.jui.CJuiAutoComplete', array(
+                                'model'=>$model,
+                                'attribute'=>'nit_proveedor',
+                                'name'=>'nit_proveedor',
+                                'source'=>array_map(function($key, $value) {
+                                    $algo = explode(' - ', $value);
+                                   return array('label' => $value, 'value' => $key, 'name'=>  $algo[1]);
+                                }, 
+                                array_keys(Proveedor::model()->getProveedor()), 
+                                Proveedor::model()->getProveedor()),
+                                'htmlOptions'=>array(
+                                    'class'=>'span5',
+                                    'readonly'=>$readonly
+                                ),
+                                'options'=> array(
+                                    'select'=>"js:function(event, ui) { 
+                                        $('#name_proveedor').val(ui.item.name).attr('readonly','readonly'); 
+                                    }",
+                                    'response'=>"js:function(event, ui) { 
+                                        console.log('HL close');
+                                    }"
+                                ),
+                            ));
+                         ?>
+                    <?php echo CHtml::label("Nombre Proveedor", 'name_pro'); ?>
+                    <?php echo CHtml::textField('name_proveedor',$model->nitProveedor->razon_social,array('class'=>'span5','readonly'=>$readonly)); ?>
+
+                    <?php echo $form->hiddenField($model,'id_centro_costos'); ?>
+                    <?php echo $form->label($model,'id_centro_costos'); ?>
+                    <?php echo CHtml::textField('name_centro_costos',$model->centroCostos->nombre,array('class'=>'span5', 'readonly'=>$readonly)); ?>
+
+                    <?php echo $form->textFieldRow($model,'fecha_recibido',array('class'=>'span5', 'readonly'=>$readonly)); ?>
+
+                    <?php echo $form->textFieldRow($model,'nro_factura',array('class'=>'span5','maxlength'=>30,'readonly'=>$modificar_campos)); ?>
+
+                    <?php
+                            echo $form->labelEx($model,'fecha_factura');
+                            $this->widget('zii.widgets.jui.CJuiDatePicker', array(
+                                    'model'=>$model,
+                                    'id'=>'picker_fecha_fact',
+                                    'attribute'=>'fecha_factura',
+                                    'language' => 'es',
+                                    'options'=>array(
+                                            'showAnim'=>'fold',
+                                            'dateFormat' => 'yy-mm-dd',
+                                            'changeMonth'=> true,
+                                            'changeYear'=> true,
+                                            'maxDate'=>date('Y-m-d'),
+                                            ),'htmlOptions'=>array(
+                                                    'style'=>'height:20px;',
+                                                    'data-sync' => 'true',
+                                                    'class' => 'span5',
+                                                    'readonly'=>$modificar_campos
+                                                    )
+                                    )
+                            );
+                    ?>
+
+                    <?php
+                            echo $form->labelEx($model,'fecha_vencimiento');
+                            $this->widget('zii.widgets.jui.CJuiDatePicker', array(
+                                    'model'=>$model,
+                                    'id'=>'picker_fecha_venc',
+                                    'attribute'=>'fecha_vencimiento',
+                                    'language' => 'es',
+                                    'options'=>array(
+                                            'showAnim'=>'fold',
+                                            'dateFormat' => 'yy-mm-dd',
+                                            'changeMonth'=> true,
+                                            'changeYear'=> true,
+                                            'minDate'=>date('Y-m-d'),
+                                            ),'htmlOptions'=>array(
+                                                    'style'=>'height:20px;',
+                                                    'data-sync' => 'true',
+                                                    'class' => 'span5',
+                                                    'readonly'=>$modificar_campos
+                                                    )
+                                    )
+                            );
+                    ?>
+
+
+                    <?php echo $form->textFieldRow($model,'cant_productos',array('class'=>'span5 numeric','readonly'=>$modificar_campos)); ?>
+
+                    <?php echo $form->textFieldRow($model,'valor_productos',array('class'=>'span5 numeric','readonly'=>$modificar_campos)); ?>
+
+                    <?php echo $form->textFieldRow($model,'nro_pagos',array('class'=>'span5','readonly'=>$modificar_campos)); ?>
+                    <?php echo $form->dropDownListRow($model,'analista_encargado',  CHtml::listData(Analistas::model()->with('infoAnalista')->findAll(), 'id_analista', 'infoAnalista.nombre_completo'),array('class'=>'span5', 'prompt'=>'Seleccione Analista ...','disabled'=>$modificar_campos)); ?>
+                    <div class="well">
+                    <?php $modificar  = (($model->paso_wf == 'swFacturas/revisionanalista' || $model->paso_wf == 'swFacturas/devolver_revision_analista') && !$model->hasErrors()) || ($model->paso_wf =='swFacturas/aprobar_jefe' && $model->hasErrors()) ||
+                                        (($model->paso_wf == 'swFacturas/causacion' || $model->paso_wf == 'swFacturas/devolver_causacion') && !$model->hasErrors()) || ($model->paso_wf =='swFacturas/enviar_fra' && $model->hasErrors()); ?>
+                    
+                    <?php if($modificar): ?>
+
+                            
+                            <?php $this->widget('bootstrap.widgets.BootButton', array(
+                                                                'label'=>'Agregar Cuenta Contable',
+                                                                'url'=>'#myModalContable',
+                                                                'type'=>'primary',
+                                                                'htmlOptions'=>array('data-toggle'=>'modal', 'style' => 'margin:-9px 0px 0px 35px; '),
+                                                            )); ?>
+                    
+                    <?php  endif; ?>        
+                            <?php 
+                            $this->widget('bootstrap.widgets.BootGridView',array(
+                              'id'=>'contable-factura-grid',
+                              'dataProvider'=> CuentasFacturas::model()->search($model->id_factura),
+                              'type'=>'striped bordered condensed',
+                                  'ajaxUpdateError' => 'function(xhr){if(xhr.status == 400){alert("No se pudo eliminar el registo. Por favor verifique que no tenga ningun otro registro asociado.")}else{alert("Hay un error en los datos ingresados para la búsqueda. Por favor valide.")}}',
+                              'columns'=>array(
+                                    array(
+                                        'name'=>'id_cuenta',
+                                        'value'=>'$data->idCuentaContable->codigo'
+                                    ),
+                                    array(
+                                        'header'=>'Nombre',
+                                        'value'=>'$data->idCuentaContable->nombre'
+                                    ),
+                                    array(
+                                        'class'=>'bootstrap.widgets.BootButtonColumn',
+                                        'template' => '{delete}',
+                                        'buttons'=>array
+                                                  (
+                                                    'delete' => array
+                                                        (
+                                                            'visible'=>'$data->permitirEliminar()'
+                                                        )
+                                                ),
+                                        
+                                        //'afterDelete' => 'function(link, success, data){ if(success){  $(\'#proveedores-seleccion-grid\').yiiGridView.update(\'proveedores-seleccion-grid\'); }}',
+                                        'deleteButtonUrl'=>'Yii::app()->createUrl(\'facturacion/facturas/deleteCuenta/id/\'. $data->id_cuenta_factura)',
+                                ),
+                              ),
+                            )); ?>
+                            </div>
+                        
+
+                
+                <?php endif; ?>
+                
+                <?php echo $form->textAreaRow($model,'observacion',array('class'=>'span5')); ?>
+                
+                <?php echo $form->dropDownListRow($model,'paso_wf',  SWHelper::nextStatuslistData($model),array('class'=>'span5')); ?>
+                
+                <div class="form-actions">
+                        <?php $this->widget('bootstrap.widgets.BootButton', array(
+                                'buttonType'=>'submit',
+                                'type'=>'primary',
+                                'label'=>$model->isNewRecord ? 'Crear' : 'Actualizar',
+                        )); ?>
+                </div>
+            </div>
+            <div class="span7">
+                <?php // echo CHtml::textField($name) ?>
+                <?php $this->renderPartial('verArchivo', array('archivo'=>$model->path_imagen));  ?>
+                <?php if($model->paso_wf == 'swFacturas/enviar_fra'): ?>
+                <?php                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+                            $this->widget('bootstrap.widgets.BootGridView',array(
+                              'id'=>'contable-factura-grid3',
+                              'dataProvider'=> ConsecutivoTipificadas::model()->search($model->id_factura),
+                              'type'=>'striped bordered condensed',
+                                  'ajaxUpdateError' => 'function(xhr){if(xhr.status == 400){alert("No se pudo eliminar el registo. Por favor verifique que no tenga ningun otro registro asociado.")}else{alert("Hay un error en los datos ingresados para la búsqueda. Por favor valide.")}}',
+                              'columns'=>array(
+                                    array(
+                                        'header'=>'Cuenta',
+                                        'value'=>'$data->idTipificadaCuentaFactura->idCuentaFactura->idCuentaContable->codigo'
+                                    ),
+                                    array(
+                                        'header'=>'Nombre',
+                                        'value'=>'$data->idTipificadaCuentaFactura->idCuentaFactura->idCuentaContable->nombre'
+                                    ),
+                                    
+                                    array(
+                                        'header'=>'Codigo Tipificada',
+                                        'value'=>'$data->idTipificadaCuentaFactura->codigo_tipificada'
+                                    ),
+                                    array(
+                                        'header'=>'Descripción Tipificada',
+                                        'value'=>'$data->idTipificadaCuentaFactura->descripcion_tipificada'
+                                    ),
+                                  'consecutivo_valor',
+                                  'descripcion_valor',
+                                  array(
+                                      'name'=>'valor',
+                                      'type'=>'raw',
+                                      'value'=>'CHtml::activeTextField($data, "valor")'
+                                  )
+//                                    array(
+//                                        'class'=>'bootstrap.widgets.BootButtonColumn',
+//                                        'template' => '{delete}',
+//                                        'buttons'=>array
+//                                                  (
+//                                                    'delete' => array
+//                                                        (
+//                                                            'visible'=>'$data->permitirEliminarCaus()'
+//                                                        )
+//                                                ),
+//                                        
+//                                        //'afterDelete' => 'function(link, success, data){ if(success){  $(\'#proveedores-seleccion-grid\').yiiGridView.update(\'proveedores-seleccion-grid\'); }}',
+//                                        'deleteButtonUrl'=>'Yii::app()->createUrl(\'facturacion/facturas/deleteCuenta/id/\'. $data->id_cuenta_factura)',
+//                                ),
+                              ),
+                            )); ?>
+                <?php endif; ?>
+            </div>
+        </div>
+<?php $this->endWidget(); ?>
+        
+<?php $this->beginWidget('bootstrap.widgets.BootModal', array('id'=>'myModalOrden', 'htmlOptions' => array('class' => 'hide', 'data-backdrop' => 'static'))); ?>
+
+
+  <div class="modal-header">
+      <a class="close" data-dismiss="modal">&times;</a>
+      <h3>Seleccionar Orden de Compra</h3>
+  </div>
+   
+  <div id="modal-content" class="modal-body">
+      
+  <?php 
+  $this->widget('bootstrap.widgets.BootGridView',array(
+    'id'=>'ordenes-compra-grid',
+    'dataProvider'=>  $ordenes->search($model->nit_proveedor),
+    'type'=>'striped bordered condensed',
+    'filter'=>$ordenes,
+	'ajaxUpdateError' => 'function(xhr){if(xhr.status == 400){alert("No se pudo eliminar el registo. Por favor verifique que no tenga ningun otro registro asociado.")}else{alert("Hay un error en los datos ingresados para la búsqueda. Por favor valide.")}}',
+    'columns'=>array(
+      'id_orden',
+      'dato',
+      array(
+        'class'=>'bootstrap.widgets.BootButtonColumn',
+        'template' => '{select}',
+        'buttons'=>array
+                  (
+                    'select' => array
+                        (
+                          'label' => "<i class='icon-ok'></i>", 
+                          'url' => 'Yii::app()->createUrl("facturacion/facturas/addOrden", array("id_factura"=>'.$model->id_factura.', "id_orden" => $data->id_orden))',
+                          'options'=>array(
+                             'title' => 'Seleccionar',  
+                              'class'=> 'adiccionar-orden',
+                             "onClick"  => '(function(e, obj){ 
+                                $("#myModalOrden").modal("hide");
+                              })(event, this)', 
+//                            'onClick'=>	'jQuery.ajax({\'url\':\'$(this).attr("href")\',\'dataType\':\'json\',\'type\':\'post\',\'success\':function(data){
+//                                    if(data.status == \'success\'){
+//                                            $(\'#myModalOrden\').modal(\'hide\');
+//                                            resetGridView("proveedores-grid");
+//                                    }else{
+//                                        alert(\'algo paso\');
+//                                    }
+//                            },\'cache\':false});return false;'                               
+                          ),
+                        ),
+                  ),
+      ),
+    ),
+  )); ?>
+
+  </div>
+  <div class="modal-footer">
+      <?php $this->widget('bootstrap.widgets.BootButton', array(
+          'label'=>'Cerrar',
+          'url'=>'#',
+          'htmlOptions'=>array('data-dismiss'=>'modal', 'id' => "cerrar_modal", 'onClick' => 'resetGridView("cuenta-contable-grid");$("#myModal2").modal("hide");$("#crearCostosModal").modal();'),
+      )); ?>
+  </div>
+
+ 
+<?php $this->endWidget(); ?>
+<?php $this->beginWidget('bootstrap.widgets.BootModal', array('id'=>'myModalContable', 'htmlOptions' => array('class' => 'hide', 'data-backdrop' => 'static'))); ?>
+
+
+  <div class="modal-header">
+      <a class="close" data-dismiss="modal">&times;</a>
+      <h3>Seleccionar Orden de Compra</h3>
+  </div>
+   
+  <div id="modal-content" class="modal-body">
+      
+  <?php 
+  $this->widget('bootstrap.widgets.BootGridView',array(
+    'id'=>'cuenta-contable-grid',
+    'dataProvider'=>  $cuentas->search(),
+    'type'=>'striped bordered condensed',
+    'filter'=>$cuentas,
+	'ajaxUpdateError' => 'function(xhr){if(xhr.status == 400){alert("No se pudo eliminar el registo. Por favor verifique que no tenga ningun otro registro asociado.")}else{alert("Hay un error en los datos ingresados para la búsqueda. Por favor valide.")}}',
+    'columns'=>array(
+        'id',
+      'codigo',
+      'nombre',
+      array(
+        'class'=>'bootstrap.widgets.BootButtonColumn',
+        'template' => '{select}',
+        'buttons'=>array
+                  (
+                    'select' => array
+                        (
+                          'label' => "<i class='icon-ok'></i>", 
+                          'url' => 'Yii::app()->createUrl("facturacion/facturas/addCuenta", array("id_factura"=>'.$model->id_factura.', "id_cuenta" => $data->id))',
+                          'options'=>array(
+                             'title' => 'Seleccionar',  
+                              'class'=> 'adiccionar-contable',
+                             "onClick"  => '(function(e, obj){ 
+                                $("#myModalContable").modal("hide");
+                              })(event, this)', 
+//                            'onClick'=>	'jQuery.ajax({\'url\':\'$(this).attr("href")\',\'dataType\':\'json\',\'type\':\'post\',\'success\':function(data){
+//                                    if(data.status == \'success\'){
+//                                            $(\'#myModalOrden\').modal(\'hide\');
+//                                            resetGridView("proveedores-grid");
+//                                    }else{
+//                                        alert(\'algo paso\');
+//                                    }
+//                            },\'cache\':false});return false;'                               
+                          ),
+                        ),
+                  ),
+      ),
+    ),
+  )); ?>
+
+  </div>
+  <div class="modal-footer">
+      <?php $this->widget('bootstrap.widgets.BootButton', array(
+          'label'=>'Cerrar',
+          'url'=>'#',
+          'htmlOptions'=>array('data-dismiss'=>'modal', 'id' => "cerrar_modal", 'onClick' => 'resetGridView("cuenta-contable-grid");$("#myModal2").modal("hide");$("#crearCostosModal").modal();'),
+      )); ?>
+  </div>
+
+ 
+<?php $this->endWidget(); ?>
+<script type="text/javascript">
+ $(document).ready(function() {
+    $('#Facturas_rte_fte').change(function(){
+        var porc = this.value;
+        var valor = '<?php echo $model->valor_productos ?>';
+        $('#Facturas_valor_rte_fte').val(porc * valor);
+//        $('#Facturas_valor_rte_fte').val($('#Facturas_valor_rte_fte').val().replace(".",","));
+//        $('#Facturas_valor_rte_fte').maskMoney('mask',$('#Facturas_valor_rte_fte').val());
+    });
+    $('#Facturas_valor_productos').maskMoney();
+    $('#name_proveedor').focus(function(){
+        var nit = $('#nit_proveedor').val();
+        $.ajax({
+            type: 'post',
+            dataType : 'json',
+            url : '<?php echo $this->createUrl('/proveedor/getRazonSocial'); ?>',
+            data : {nit : nit},
+            success : function(data){ 
+              if(data.status == "error"){
+                $("#name_proveedor").val('').attr('readonly',false);
+
+              }
+            }
+          });
+    }); 
+    $(".adiccionar-orden").live("click", function(e){
+        e.preventDefault();
+        addOrden($(this).attr("href"));
+    });
+    function addOrden(url)
+    {
+    jQuery.ajax({'url': url ,'type':'post','dataType':'json','success':function(data)
+        {
+            if(data.status == 'success'){
+                $('#myModalProv').modal('hide');
+                resetGridView("ordenes-factura-grid");
+                if($('#Facturas_id_centro_costos').val() == ''){
+                    $('#Facturas_id_centro_costos').val(data.centro);
+                    $('#name_centro_costos').val(data.nombre_centro);
+                }
+//                resetGridView("proveedores-seleccion-grid");
+            }
+
+        } ,'cache':false});
+    
+    return false;  
+    }
+    $(".adiccionar-contable").live("click", function(e){
+        e.preventDefault();
+        addContable($(this).attr("href"));
+    });
+    function addContable(url)
+    {
+    jQuery.ajax({'url': url ,'type':'post','dataType':'json','success':function(data)
+        {
+            if(data.status == 'success'){
+                $('#myModalContable').modal('hide');
+                resetGridView("contable-factura-grid");
+                resetGridView("contable-factura-grid2");
+                resetGridView("cuenta-contable-grid");
+            }
+
+        } ,'cache':false});
+    
+    return false;  
+    }
+});
+</script>

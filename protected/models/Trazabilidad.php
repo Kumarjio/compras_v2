@@ -1,5 +1,4 @@
 <?php
-
 /**
  * This is the model class for table "trazabilidad".
  *
@@ -14,10 +13,12 @@
  * @property string $fecha_cierre
  *
  * The followings are the available model relations:
+ * @property ObservacionesTrazabilidad[] $observacionesTrazabilidads
  * @property Recepcion $na0
  * @property Estados $estado0
- * @property Flujo $actividad0
- * @property Usuario $user_asign0
+ * @property Usuario $userAsign
+ * @property ActividadTipologia $actividad0
+ * @property AdjuntosTrazabilidad[] $adjuntosTrazabilidads
  */
 class Trazabilidad extends CActiveRecord
 {
@@ -32,6 +33,7 @@ class Trazabilidad extends CActiveRecord
 	/**
 	 * @return array validation rules for model attributes.
 	 */
+	public $buscar;
 	public function rules()
 	{
 		// NOTE: you should only define rules for those attributes that
@@ -39,27 +41,29 @@ class Trazabilidad extends CActiveRecord
 		return array(
 			array('na, user_asign, estado, actividad', 'required'),
 			array('estado, actividad', 'numerical', 'integerOnly'=>true),
-			array('user_cierre, fecha_cierre, user_asign', 'safe'),
+			array('user_cierre, fecha_cierre, user_asign, buscar', 'safe'),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, na, user_asign, fecha_asign, estado, actividad, user_cierre, fecha_cierre', 'safe', 'on'=>'search'),
+			array('id, na, user_asign, fecha_asign, estado, actividad, user_cierre, fecha_cierre, buscar', 'safe', 'on'=>'search'),
 		);
 	}
 
 	/**
 	 * @return array relational rules.
 	 */
-	public function relations()
-	{
-		// NOTE: you may need to adjust the relation name and the related
-		// class name for the relations automatically generated below.
-		return array(
-			'na0' => array(self::BELONGS_TO, 'Recepcion', 'na'),
-			'estado0' => array(self::BELONGS_TO, 'Estados', 'estado'),
-			'actividad0' => array(self::BELONGS_TO, 'Flujo', 'actividad'),
-			'user_asign0' => array(self::BELONGS_TO, 'Usuario', 'user_asign'),
-		);
-	}
+    public function relations()
+    {
+        // NOTE: you may need to adjust the relation name and the related
+        // class name for the relations automatically generated below.
+        return array(
+            'observacionesTrazabilidads' => array(self::HAS_MANY, 'ObservacionesTrazabilidad', 'id_trazabilidad'),
+            'na0' => array(self::BELONGS_TO, 'Recepcion', 'na'),
+            'estado0' => array(self::BELONGS_TO, 'Estados', 'estado'),
+            'userAsign' => array(self::BELONGS_TO, 'Usuario', 'user_asign'),
+            'actividad0' => array(self::BELONGS_TO, 'ActividadTipologia', 'actividad'),
+            'adjuntosTrazabilidads' => array(self::HAS_MANY, 'AdjuntosTrazabilidad', 'id_trazabilidad'),
+        );
+    }
 
 	/**
 	 * @return array customized attribute labels (name=>label)
@@ -75,6 +79,7 @@ class Trazabilidad extends CActiveRecord
 			'actividad' => 'Actividad',
 			'user_cierre' => 'User Cierre',
 			'fecha_cierre' => 'Fecha Cierre',
+			'buscar' => 'Buscar',
 		);
 	}
 
@@ -140,43 +145,135 @@ class Trazabilidad extends CActiveRecord
 			  )
 		));
 	}
+	/*public function search_adjuntos()
+	{
+		$sql = " SELECT ROW_NUMBER() OVER() AS no, adjunto.fecha, adjunto.nombres,  adjunto.path  FROM (
+				 SELECT adj.path, recep.fecha_recepcion AS fecha,  usu.nombres || ' ' || usu.apellidos AS nombres 
+				 FROM adjuntos_recepcion  AS adj
+				 INNER JOIN recepcion AS recep
+				 ON adj.na = recep.na
+				 INNER JOIN usuario AS usu
+				 ON recep.user_recepcion = usu.usuario
+				 WHERE adj.na = ".$_POST['na']."
+				 UNION
+				 SELECT tra.path, tra.fecha, users.nombres || ' ' || users.apellidos AS nombres
+				 FROM adjuntos_trazabilidad AS tra
+				 INNER JOIN usuario AS users
+				 ON tra.usuario = users.usuario
+				 WHERE na = ".$_POST['na']."
+				 ) AS adjunto "; 
+		$rawData = Yii::app()->db->createCommand($sql);
+		$count = Yii::app()->db->createCommand('SELECT COUNT(*) FROM (' . $sql . ') AS total')->queryScalar();
+		return new CSqlDataProvider($rawData, array('totalItemCount' => $count));
+	}*/
 	public function search_pendientes()
 	{
 		$criteria=new CDbCriteria;
 		$criteria->compare('id',$this->id,true);
-		$criteria->compare('na',$this->na,true);
+		//$criteria->compare('na',$this->na,true);
+		$criteria->compare('CAST(na AS TEXT)',$this->buscar,true);
 		$criteria->compare('user_asign',Yii::app()->user->usuario);
 		$criteria->compare('fecha_asign',$this->fecha_asign,true);
 		$criteria->compare('estado', '1');
 		$criteria->compare('actividad',$this->actividad);
 		$criteria->compare('user_cierre',$this->user_cierre,true);
 		$criteria->compare('fecha_cierre',$this->fecha_cierre,true);
+
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
+			'sort'=>array(
+			    'defaultOrder'=>'id ASC',
+			  )
 		));
 	}
-
-	public function estado($na){
-		$model = Trazabilidad::model();
-		if($this->fecha_cierre == ''){
-			$imagesDir = dirname(__FILE__).'/../images/'; 
-			$fecha_hasta = strtotime("+".$this->actividad0->actividad0->tiempo_empresa." days", strtotime($this->fecha_asign));
-			$fecha_hoy = strtotime(date("y-m-d"));
-			if($fecha_hasta == $fecha_hoy)
-				return CHtml::image(Yii::app()->assetManager->publish($imagesDir.'circle_yellow.png'),"",array("style"=>"width:20px;height:20px;"));
-			elseif($fecha_hasta > $fecha_hoy)
-				return CHtml::image(Yii::app()->assetManager->publish($imagesDir.'circle_green.png'),"",array("style"=>"width:20px;height:20px;"));
-			else
-				return CHtml::image(Yii::app()->assetManager->publish($imagesDir.'circle_red.png'),"",array("style"=>"width:20px;height:20px;"));
-			//return CHtml::button('hola');
-			return CHtml::tag('a',array( 'class'=>'holsdafdsala','onclick'=> "return false;", 'hoaos'=>'jjlll'),$imagen);
-			return CHtml::link($imagen,$this->na, array('onclick'=> 'return false;', 'class'=>'holla'));
-		}
-		else
-			return '';
+	public function estado($trazabilidad, $actividad){
+		$imagesDir = dirname(__FILE__).'/../images/';
+		$model=Trazabilidad::model()->findByPk($trazabilidad);
+		$actividad = ActividadTipologia::model()->findByPk($actividad);
+		$fechaLimite = date('Ymd', strtotime('+'.$actividad->tiempo.' days', strtotime($model->fecha_asign)));
+		$fechaLimite = $fechaLimite - date("Ymd");
+		if($fechaLimite == "0"){
+			return CHtml::image(Yii::app()->assetManager->publish($imagesDir.'circle_yellow.png'),"",array("style"=>"width:20px;height:20px;"));
+		}elseif($fechaLimite > "0"){
+			return CHtml::image(Yii::app()->assetManager->publish($imagesDir.'circle_green.png'),"",array("style"=>"width:20px;height:20px;"));
+		}else{
+			return CHtml::image(Yii::app()->assetManager->publish($imagesDir.'circle_red.png'),"",array("style"=>"width:20px;height:20px;"));
+		}	
 	}
+	public function estadoUsuario($trazabilidad, $actividad){
 
-	public function traerImagen($na){
-		return "algo con imagen.".$na;
+		$model=Trazabilidad::model()->findByPk($trazabilidad);
+		$actividad = ActividadTipologia::model()->findByPk($actividad);
+		$fechaLimite = date('Ymd', strtotime('+'.$actividad->tiempo.' days', strtotime($model->fecha_asign)));
+		$fechaLimite = $fechaLimite - date("Ymd");
+		return $fechaLimite;
+	}
+	public function estadoCasoCliente($na){
+		$model = Recepcion::model()->findByPk($na);
+		$fecha = (strtotime($model->fecha_cliente) - strtotime(date("Y-m-d")) ) / 86400;
+		if($fecha == "0"){
+			//return "<span id='fecha_cliente' class='label label-warning hand'>Cliente ".date("d/m/Y",strtotime($model->fecha_cliente))."</span>";
+			return "<span class='label label-warning'>Cliente ".date("d/m/Y",strtotime($model->fecha_cliente))."</span>";
+		}else if($fecha > "0"){
+			//return "<span id='fecha_cliente' class='label label-success hand'>Cliente ".date("d/m/Y",strtotime($model->fecha_cliente))."</span>";
+			return "<span class='label label-success'>Cliente ".date("d/m/Y",strtotime($model->fecha_cliente))."</span>";
+		}else{
+			//return "<span id='fecha_cliente' class='label label-danger hand'>Cliente ".date("d/m/Y",strtotime($model->fecha_cliente))."</span>";
+			return "<span class='label label-danger'>Cliente ".date("d/m/Y",strtotime($model->fecha_cliente))."</span>";
+		}
+	}
+	public function estadoCasoInterna($na){
+		$model = Recepcion::model()->findByPk($na);
+		$fecha = (strtotime($model->fecha_interna) - strtotime(date("Y-m-d")) ) / 86400;
+		if($fecha == "0"){
+			return "<span class='label label-warning'>Interna ".date("d/m/Y",strtotime($model->fecha_interna))."</span>";
+		}else if($fecha > "0"){
+			return "<span class='label label-success'>Interna ".date("d/m/Y",strtotime($model->fecha_interna))."</span>";
+		}else{
+			return "<span class='label label-danger'>Interna ".date("d/m/Y",strtotime($model->fecha_interna))."</span>";
+		}
+	}
+	public function linkCaso($na){
+		return CHtml::link('<u>'.$na.'</u>', array('trazabilidad/index','na'=>base64_encode($na)));
+	}
+	public function estadoActividad($trazabilidad, $actividad){
+		$model=Trazabilidad::model()->findByPk($trazabilidad);
+		$actividad = ActividadTipologia::model()->findByPk($actividad);
+		//return $actividad->tiempo;
+		for($i = 0; $i <= $actividad->tiempo; $i++){
+			$fecha_consulta = date('Ymd', strtotime('+'.$i.' days', strtotime(date("Ymd",strtotime($model->fecha_asign)))));
+			if(Festivos::traerDiaFestivo($fecha_consulta)){
+				$actividad->tiempo++;
+			}
+		}
+		$fechaLimite = $fecha_consulta - date("Ymd");
+		if($fechaLimite == "0"){
+			return "<span class='label label-warning'>".date("d/m/Y",strtotime($fecha_consulta))."</span>";
+		}else if($fechaLimite > "0"){
+			return "<span class='label label-success'>".date("d/m/Y",strtotime($fecha_consulta))."</span>";
+		}else{
+			return "<span class='label label-danger'>".date("d/m/Y",strtotime($fecha_consulta))."</span>";
+		}
+	}
+	public function validaReasignacion($id_trazabilidad){
+		$model=Trazabilidad::model()->findByPk($id_trazabilidad);
+		$cantidad = count(UsuariosActividadTipologia::model()->findAll(array("condition"=>"id_actividad_tipologia =  $model->actividad AND \"usuario0\".\"activo\" = true",'with'=>'usuario0')));
+		if($cantidad > "1"){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	public static function estadoActual($na)
+	{
+		if(Trazabilidad::model()->findByAttributes(array("na"=>$na,"estado"=>"1"))){
+			return "En Proceso";
+		}else{
+			return "Cerrado";
+		}
+	}
+	public function validaRetomar($id_actividad)
+	{
+		return UsuariosActividadTipologia::model()->findByAttributes(array("id_actividad_tipologia"=>$id_actividad,"usuario"=>Yii::app()->user->usuario));
 	}
 }

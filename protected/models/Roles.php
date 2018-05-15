@@ -24,16 +24,19 @@ class Roles extends CActiveRecord
 	/**
 	 * @return array validation rules for model attributes.
 	 */
+	public $buscar;
 	public function rules()
 	{
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
 			array('rol', 'required'),
-			array('activo', 'safe'),
+			array('rol','unique','message'=>'{attribute} "{value}" ya existe.'),
+			array('activo, buscar', 'safe'),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, rol, activo', 'safe', 'on'=>'search'),
+			array('id, rol, activo, buscar', 'safe', 'on'=>'search'),
+			array('rol', 'validaUnico'),
 		);
 	}
 
@@ -59,6 +62,7 @@ class Roles extends CActiveRecord
 			'id' => 'ID',
 			'rol' => 'Rol',
 			'activo' => 'Activo',
+			'buscar'=> 'Buscar',
 		);
 	}
 
@@ -81,8 +85,11 @@ class Roles extends CActiveRecord
 		$criteria=new CDbCriteria;
 
 		$criteria->compare('id',$this->id);
-		$criteria->compare('rol',$this->rol,true);
-		$criteria->compare('activo',1);
+		//$criteria->compare('rol',$this->rol,true);
+		//$criteria->compare('activo',1);
+		if(!empty($this->buscar)){
+			$criteria->addCondition("rol in (select rol from usuario where rol ilike '%".$this->buscar."%')");
+		}
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
@@ -104,7 +111,29 @@ class Roles extends CActiveRecord
 	}
 	public static function cargarRoles()
 	{
-	 	$consulta = CHtml::listData(Roles::model()->findAll(array('order' => 'rol')),'id','rol');
-	 	return $consulta;
+		$consulta = Yii::app()->db->createCommand("SELECT id, rol FROM roles WHERE activo = TRUE ORDER BY rol")->queryAll();
+		return CHtml::listData($consulta,'id', 'rol');
+	}
+	public function getPermisos(){
+		$permisos = array();
+		foreach ($this->permisosRoles as $p) {
+			array_push($permisos, $p->idPermiso->nombre_permiso);
+		}
+		if(sizeof($permisos) == 0)
+			return "";
+		return "<ul><li>".implode("</li><li>", $permisos)."</li></ul>";
+	}
+	public function validaUnico(){
+		$criteriaVal = new CDbCriteria;
+		$criteriaVal->addCondition("TRIM(rol) ILIKE '".trim($this->rol)."'");
+		if(!$this->isNewRecord){
+			$criteriaVal->addNotInCondition('id', array($this->id));
+		}
+
+		$duplicados = Roles::model()->findAll($criteriaVal);
+
+		if($duplicados){
+			$this->addError('rol', 'El nombre del rol ya existe en el sistema.');
+		}
 	}
 }

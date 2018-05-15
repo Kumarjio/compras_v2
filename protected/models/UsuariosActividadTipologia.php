@@ -15,6 +15,7 @@
  */
 class UsuariosActividadTipologia extends CActiveRecord
 {
+	public $nombre_completo;
 	/**
 	 * @return string the associated database table name
 	 */
@@ -102,5 +103,55 @@ class UsuariosActividadTipologia extends CActiveRecord
 	public static function model($className=__CLASS__)
 	{
 		return parent::model($className);
+	}
+	public static function asignacionUsuarioActividad($sucesion)
+	{
+		$consulta_minimo = UsuariosActividadTipologia::model()->with( array('usuario0'=>array("alias"=>"c",'condition'=>'c.activo = true')))->findByAttributes(array("id_actividad_tipologia"=>$sucesion),array('order'=>'asignacion'));
+		if($consulta_minimo){
+			$usuario = $consulta_minimo->usuario;
+			$consulta_maximo = UsuariosActividadTipologia::model()->with( array('usuario0'=>array("alias"=>"c",'condition'=>'c.activo = true')))->findByAttributes(array("id_actividad_tipologia"=>$sucesion),array('order'=>'asignacion DESC'));
+			if($consulta_maximo){
+				$maximo = $consulta_maximo->asignacion+1;
+				$consulta_minimo->asignacion = $maximo;
+				$consulta_minimo->save();
+			}
+		}else{
+			$usuario = Yii::app()->user->usuario;
+		}
+		return $usuario;
+	}
+	public function search_detalle(){
+
+		$criteria=new CDbCriteria;
+
+		//$criteria->select = 't.usuario, ati.id_tipologia';
+		//$criteria->join = "INNER JOIN actividad_tipologia AS ati ON ati.id = t.id_actividad_tipologia ";
+		$criteria->compare('id',$this->id,true);
+		$criteria->compare('usuario',$_GET['usuario']);
+		$criteria->compare('id_actividad_tipologia',$this->id_actividad_tipologia,true);
+		$criteria->compare('asignacion',$this->asignacion);
+
+        //$criteria->group = 't.usuario, ati.id_tipologia';
+        //$criteria->order = 'ati.id_tipologia ASC';
+
+		return new CActiveDataProvider($this, array(
+			'criteria'=>$criteria,
+		));
+	}
+	public function getActividades(){
+		$actividades = array();
+		$consulta = ActividadTipologia::model()->findAllByAttributes(array("id"=>$this->id_actividad_tipologia));
+		foreach ($consulta as $actividad) {
+			array_push($actividades, ucwords(strtolower($actividad->idActividad->actividad)));
+		}
+		if(sizeof($actividades) == 0)
+			return "";
+		return "<ul><li>".implode("</li><li>", $actividades)."</li></ul>";
+	}
+
+	public static function cargaUsuariosActividad($id_actividad)
+	{
+		$usuario = Yii::app()->user->usuario;
+		return CHtml::listData(UsuariosActividadTipologia::model()->findAll(array("condition"=>"id_actividad_tipologia =  $id_actividad AND \"usuario0\".\"activo\" = true AND \"usuario0\".\"usuario\" <> '$usuario'","select"=>"INITCAP(usuario0.nombres) || ' '|| INITCAP(usuario0.apellidos) AS nombre_completo",'order' => 'usuario0.nombres', 'with'=>'usuario0')),'usuario0.usuario',CHtml::encode('nombre_completo'),true);
 	}
 }

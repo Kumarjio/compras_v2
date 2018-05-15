@@ -49,7 +49,7 @@ class SWActiveRecordBehavior extends CBehavior {
 	/**
 	 * @var string  This is the column name where status is stored.
 	 */
-	public $statusAttribute = 'status';
+	public $statusAttribute = 'paso_wf';
 	/**
 	 * @var string workflow name that should be used by default for the owner model.
 	 */

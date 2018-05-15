@@ -1,0 +1,157 @@
+--- protected/models/Orden.php
++++ protected/models/Orden.php
+@@ -216,10 +216,10 @@
+ 			array('orden, tipo_compra, id_gerencia, id_jefatura, id_gerente, id_jefe, id_usuario, validacion_usuario, validacion_jefe, validacion_gerente', 'numerical', 'integerOnly'=>true,'on'=>array('sw:llenaroc_jefe')),
+ 
+ 			array('nombre_compra, paso_wf', 'length', 'max'=>255),
+-			array('tipo_compra, nombre_compra, resumen_breve, id_gerencia, id_jefatura, id_gerente, id_jefe, validacion_usuario, validacion_jefe, validacion_gerente, cuenta_contable,valor_presupuestado, observacion, nombre_usuario_search,negociacion_directa', 'safe'),
++			array('tipo_compra, nombre_compra, resumen_breve, id_gerencia, id_jefatura, id_gerente, id_jefe, validacion_usuario, validacion_jefe, validacion_gerente, cuenta_contable,valor_presupuestado, observacion, nombre_usuario_search,negociacion_directa,marco', 'safe'),
+ 			// The following rule is used by search().
+ 			// Please remove those attributes that should not be searched.
+-			array('id, orden, tipo_compra, nombre_compra, resumen_breve, id_gerencia, id_jefatura, fecha_solicitud, id_gerente, id_jefe, id_usuario, validacion_usuario, validacion_jefe, validacion_gerente, paso_wf', 'safe', 'on'=>'search'),
++			array('id, orden, tipo_compra, nombre_compra, resumen_breve, id_gerencia, id_jefatura, fecha_solicitud, id_gerente, id_jefe, id_usuario, validacion_usuario, validacion_jefe, validacion_gerente, paso_wf, marco', 'safe', 'on'=>'search'),
+ 			
+ 			//De Suspendido a Jefe
+ 			array('resumen_breve','verificar_direcciones', 'on' => array('sw:suspendida_jefe')),
+@@ -279,7 +279,8 @@
+ 			'validacion_jefe' => 'Certifico que las características y cantidades solicitadas fueron revisadas y son necesarias para el desarrollo de la compañía',
+ 			'validacion_gerente' => 'Certifico que las características y cantidades solicitadas fueron revisadas y son necesarias para el desarrollo de la compañía',
+ 			'paso_wf' => 'Paso Workflow',
+-			'observacion' => 'Observación'
++			'observacion' => 'Observación',
++                        'marco'=>'Solicitud tipo Marco'
+ 		);
+ 	}
+ 
+@@ -702,25 +703,31 @@
+ 						return false;
+ 					}else{
+ 
+-                      if( ($costo_total > $s_minimo * 100) && $this->algunoNoPresupuestado()){
+-
+-                        if($comite == "Junta"){
+-                          return true;
+-                        }else{
+-                          return false;
+-                        }
++						
++							
++						/*}
++						else if( ($costo_total > $s_minimo * 100) && $this->algunoNoPresupuestado()){
+ 
+-                      }else if($costo_total > ($s_minimo * 400)){
++							if($comite == "Junta"){
++							  return true;
++							}else{
++							  return false;
++							}*/
++						if($costo_total >= ($s_minimo * 135)){//($s_minimo * 100)
+ 							if($comite == "Presidencia"){
+ 								return true;
+-							}else{
+-								return false;
++							}else if($comite == "Compras"){
++								return true;
++							}else {
++							 	return false;
+ 							}
+ 						}else{
+ 							if($comite == "Compras"){
+ 								return true;
+-							}else{
+-								return false;
++							}else if($comite == "ap_x_comite"){
++							   return true;
++							}else {
++							 	return false;
+ 							}
+ 						}
+ 					}
+@@ -872,6 +879,65 @@
+ 		));
+ 	}
+ 
++	public function search_todas_area()
++	{
++		// Warning: Please modify the following code to remove attributes that
++		// should not be searched.
++
++		$criteria=new CDbCriteria;
++		$criteria->with = array( 'id_usuario' );
++
++        $criteria->condition = "t.id < 500000000";
++		$res = Gerencias::model()->jefaturaYGerencia();
++//print_r($res);die;
++		if(count($res) != 0){
++		  $id_gerencia = $res[0]['id_gerencia'];
++
++		  //Caso en el que el jefe es igual al gerente. (Analistas sin jefe, solo con gerente)
++          $jefe_gerente = Orden::model()->getJefeJefatura(Yii::app()->user->getState("id_empleado"));
++		  if(count($jefe_gerente) > 0){
++		      $id_jefatura = $jefe_gerente[0]['id_jefatura'];
++		  }else{
++		  	  $id_jefatura = $res[0]['id_jefatura'];
++		  }
++		  
++		}
++		$criteria->compare('t.id',$this->id);
++		$criteria->compare('t.orden',$this->orden);
++		$criteria->compare('t.tipo_compra',$this->tipo_compra);
++		$criteria->compare('LOWER(t.nombre_compra)',strtolower($this->nombre_compra),true);
++		$criteria->compare('t.resumen_breve',$this->resumen_breve,true);
++		$criteria->compare('t.id_gerencia',$id_gerencia);
++		$criteria->compare('t.id_jefatura',$id_jefatura);
++		$criteria->compare('t.fecha_solicitud',$this->fecha_solicitud,true);
++		$criteria->compare('t.id_gerente',$this->id_gerente);
++		$criteria->compare('t.id_jefe',$this->id_jefe);
++		$criteria->compare('t.id_usuario',$this->id_usuario);
++		$criteria->compare('LOWER(id_usuario.nombre_completo)',strtolower($this->nombre_usuario_search),true);
++		$criteria->compare('t.validacion_usuario',$this->validacion_usuario);
++		$criteria->compare('t.validacion_jefe',$this->validacion_jefe);
++		$criteria->compare('t.validacion_gerente',$this->validacion_gerente);
++		$criteria->compare('t.paso_wf',$this->paso_wf,true);
++		
++
++		if(!isset($_GET['Orden_sort']))
++		  $criteria->order = "t.id desc";
++
++		return new CActiveDataProvider($this, array(
++			'criteria'=>$criteria,
++            'pagination'=>array('pageSize'=>100),
++			'sort'=>array(
++			        'attributes'=>array(
++						'nombre_usuario_search'=>array(
++			                'asc'=>'id_usuario.nombre_completo',
++			                'desc'=>'id_usuario.nombre_completo DESC',
++			            ),
++			            '*',
++			        ),
++			    ),
++		));
++	}
++
+ 
+ 	public function search_solicitadas()
+ 	{
+@@ -1751,18 +1817,18 @@
+ 	
+ 	public function asignarAPresidencia()
+ 	{
+-		$this->usuario_actual = 504;
++		$this->usuario_actual = 498;
+ 	}
+ 
+ 	public function asignarAJunta()
+ 	{
+-		$this->usuario_actual = 504;
++		$this->usuario_actual = 498;
+ 	}
+ 
+ 	
+ 	public function asignarAJefeCompras()
+ 	{
+-		$this->usuario_actual = 511;
++		$this->usuario_actual = 32;
+ 	}
+ 
+ 	public function determinarAnalista(){

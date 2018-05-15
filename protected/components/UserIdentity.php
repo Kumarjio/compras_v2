@@ -11,7 +11,7 @@ class UserIdentity extends CUserIdentity
 	private $_id;
 
 	const ERROR_GRAVE_AUTH = 9;
-	const REQUIERE_ACCION_USUARIO = 8;
+	const USUARIO_INACTIVO = 8;
 	const ACCION_O_CONTINUAR = 7;
     const ERROR_NO_PERFIL = 6;
 	/**
@@ -29,12 +29,34 @@ class UserIdentity extends CUserIdentity
 	 	}elseif(md5($this->password) !== $usuario->contraseña){
 	 		$this->errorCode = self::ERROR_PASSWORD_INVALID;
 	 	}else{
-	 		$this->setState("usuario",$usuario->usuario);
-	 		//$this->setState("nombre",$usuario->nombres);
-	 		//$this->setState("correo",$usuario->correo);
-	 		//Yii::app()->user->correo
-	 		$this->errorCode = self::ERROR_NONE;
-	 	}
+
+            if(!$usuario->activo){
+            	$this->errorCode = self::USUARIO_INACTIVO;
+            }
+            else {
+
+		 		$this->setState("usuario",$usuario->usuario);
+				//$this->errorCode = self::ERROR_NONE;
+		 	
+	            //Cargamos Rol(es)
+	            $roles = UsuariosRoles::model()->findAll('id_usuario= :id_usuario',array('id_usuario'=>$usuario->id));
+	            $array_per = array();
+	            foreach($roles as $dt){
+	                $this->setPerfil($dt[id_rol]);
+	                array_push($array_per, $dt[id_rol]);
+	            }
+	            if( count($array_per)>0){
+	                $this->setPermisos($array_per);
+	                $this->errorCode=self::ERROR_NONE;
+	            }else{
+	                $this->errorCode=self::ERROR_NO_PERFIL;
+	            }
+            }	 		
+
+        }
+
+        //return !$this->errorCode;
+
 		//if (count($resperl) > 2) {
 			//$this->setNombre   = $resperl[1];
 			//$this->setUsuario  = strtoupper($resperl[0]);
@@ -86,27 +108,19 @@ class UserIdentity extends CUserIdentity
         $this->setState('usuario',$value);
     }
 
-    public function getOficina(){
-        return $this->getState('oficina');
-    }
-    
-    public function setOficina($value){
-        $this->setState('oficina',$value);
-    }
-	
-	public function getGerencia(){
-        return $this->getState('gerencia');
-    }
-    
-    public function setGerencia($value){
-        $this->setState('gerencia',$value);
-    }
-	
 	public function getIp(){
         return $this->getState('ip');
     }
     
     public function setIp($value){
         $this->setState('ip',$value);
+    }
+
+    public function getPerfil(){
+        return $this->getState('perfil');
+    }
+    
+    public function setPerfil($value){
+        $this->setState('perfil',$value);
     }
 }

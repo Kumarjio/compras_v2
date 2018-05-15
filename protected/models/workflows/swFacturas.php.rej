@@ -1,0 +1,11 @@
+--- models/workflows/swFacturas.php
++++ models/workflows/swFacturas.php
+@@ -160,7 +160,7 @@
+                             ),
+                         array(
+                                 'id'=>'aprobada',	
+-                                'label'=>'Operaciones',
++                                'label'=>'Aprobar Lote y Operaciones',
+                                 'transition' => array(
+                                     'pagada'
+                                 )

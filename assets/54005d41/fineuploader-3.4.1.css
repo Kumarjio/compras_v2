@@ -12,15 +12,15 @@
     width: 105px;
     padding: 7px 0;
     text-align: center;
-    background: #880000;
+    background: #04B486;
     border-bottom: 1px solid #DDD;
     color: #FFF;
 }
 .qq-upload-button-hover {
-    background: #CC0000;
+    background: #0FDBA6;
 }
 .qq-upload-button-focus {
-    outline: 1px dotted #000000;
+    outline: 1px dotted #068262;
 }
 .qq-upload-drop-area, .qq-upload-extra-drop-area {
     position: absolute;
@@ -97,7 +97,7 @@
     color: #000000;
 }
 .qq-upload-cancel, .qq-upload-delete {
-	color: #000000;
+    color: #000000;
 }
 .qq-upload-retryable .qq-upload-retry {
     display: inline;

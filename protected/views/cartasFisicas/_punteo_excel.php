@@ -157,7 +157,7 @@ $formapago =  2;
 $longitud = "CM";
 $peso = "KG";
 
-foreach (CartasFisicas::consultaExcel() as $consulta) {
+foreach ($model as $consulta) {
 	$objPHPExcel->getActiveSheet()->SetCellValue("D".$fila, $entrega);
 	$objPHPExcel->getActiveSheet()->SetCellValue("E".$fila, $sobreporte);
 	$objPHPExcel->getActiveSheet()->SetCellValue("G".$fila, strtoupper($consulta->idCartas->nombre_destinatario));
@@ -218,8 +218,9 @@ foreach (CartasFisicas::consultaExcel() as $consulta) {
 	$fila++;
 }
 // Redirect output to a clientâ€™s web browser (Excel5)
+$name="Firma Fisica ".date("d-m-Y h:i A").".xls";
 header('Content-Type: application/vnd.ms-excel');
-header('Content-Disposition: attachment;filename="Firma Fisica "'.date("d-m-Y h:i A").'".xls"');
+header('Content-Disposition: attachment;filename="'.$name.'"');
 header('Cache-Control: max-age=0');
 // If you're serving to IE 9, then the following may be needed
 header('Cache-Control: max-age=1');
@@ -232,5 +233,5 @@ header ('Pragma: public'); // HTTP/1.0
 $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');
 $objWriter->save('php://output');
 Yii::app()->end();
-exit;
+
 ?>

@@ -1,0 +1,11 @@
+--- protected/controllers/UsuarioController.php
++++ protected/controllers/UsuarioController.php
+@@ -32,7 +32,7 @@
+ 				'users'=>array('*'),
+ 			),
+ 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
+-				'actions'=>array('create','update','admin','verRoles','cambiarPass','inhabilitar','habilitar'),
++				'actions'=>array('create','update','admin','verRoles'),
+ 				'users'=>array('@'),
+ 			),
+ 			array('allow', // allow admin user to perform 'admin' and 'delete' actions

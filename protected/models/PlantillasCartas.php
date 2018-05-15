@@ -25,16 +25,18 @@ class PlantillasCartas extends CActiveRecord
 	/**
 	 * @return array validation rules for model attributes.
 	 */
+	public $buscar;
 	public function rules()
 	{
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
 			array('nombre, plantilla', 'required'),
-			array('activa', 'safe'),
+			array('activa, buscar', 'safe'),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, nombre, plantilla, activa', 'safe', 'on'=>'search'),
+			array('id, nombre, plantilla, activa, buscar', 'safe', 'on'=>'search'),
+			array('nombre', 'validaUnico'),
 		);
 	}
 
@@ -60,6 +62,7 @@ class PlantillasCartas extends CActiveRecord
 			'nombre' => 'Nombre',
 			'plantilla' => 'Plantilla',
 			'activa' => 'Activa',
+			'buscar'=> 'Buscar',
 		);
 	}
 
@@ -103,24 +106,39 @@ class PlantillasCartas extends CActiveRecord
 	}
 	public static function cargaPlantillas($tipologia)
 	{
-	 	return CHtml::listData(PlantillaTipologia::model()->findAll(array("condition"=>"id_tipologia =  $tipologia",'order' => 't.id', 'with'=>'idPlantilla')),'id_plantilla',CHtml::encode('idPlantilla.nombre'),true);
+	 	return CHtml::listData(PlantillaTipologia::model()->findAll(array("condition"=>"id_tipologia =  $tipologia AND \"idPlantilla\".\"activa\" = true",'order' => 't.id', 'with'=>'idPlantilla')),'id_plantilla',CHtml::encode('idPlantilla.nombre'),true);
 	}
 	public function search_detalle()
 	{
 		// @todo Please modify the following code to remove attributes that should not be searched.
 
 		$criteria=new CDbCriteria;
-
-		$criteria->compare('id',$this->id);
-		$criteria->compare('nombre',$this->nombre,true);
+		$criteria->addCondition("t.id <> '1' AND t.id <> '2' AND t.id <> '3'");
+		//$criteria->compare('id',$this->id);
+		//$criteria->compare('nombre',$this->nombre,true);
 		$criteria->compare('plantilla',$this->plantilla,true);
-		$criteria->compare('activa',1);
-
+		//$criteria->compare('activa',$this->plantilla,true);
+		if(!empty($this->buscar)){
+			$criteria->addCondition("nombre in (select nombre from plantillas_cartas where nombre ilike '%".$this->buscar."%')");
+		}
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
 			'sort'=>array(
 				'defaultOrder'=>'t.id ASC',
 			)
 		));
+	}
+	public function validaUnico(){
+		$criteriaVal = new CDbCriteria;
+		$criteriaVal->addCondition("TRIM(nombre) ILIKE '".trim($this->nombre)."'");
+		if(!$this->isNewRecord){
+			$criteriaVal->addNotInCondition('id', array($this->id));
+		}
+
+		$duplicados = PlantillasCartas::model()->findAll($criteriaVal);
+
+		if($duplicados){
+			$this->addError('nombre', 'El nombre de la plantilla ya existe en el sistema.');
+		}
 	}
 }

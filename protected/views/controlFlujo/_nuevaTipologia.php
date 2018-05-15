@@ -3,6 +3,12 @@
 	$cs->scriptMap['jquery.js'] = false;
 	$cs->scriptMap['jquery.min.js'] = false;
 }?>
+<style type="text/css">
+	input[type="checkbox"]{
+	  width: 30px;
+	  height: 30px;
+	}
+</style>
 <?php $form=$this->beginWidget('bootstrap.widgets.BootActiveForm',array( 
 	'id'=>'form-agregar-tipologiaJ',
 	'enableAjaxValidation'=>false,
@@ -21,11 +27,16 @@
    		<?php echo $form->textField($model,'tipologia',array('class'=>'form-control inicial','maxlength'=>'50','onKeypress'=>'return soloLetras(event)')); ?>
   	</div>
 </div>
-
- <div class='col-md-6'>
+ <div class='col-md-5'>
 	<?php echo $form->labelEx($model,'area'); ?>
 	<div class="form-group">
-   		    <?php echo $form->dropDownList($model,'area', Areas::cargaAreas(),array('class'=>'form-control','prompt'=>'...')); ?>
+   		<?php echo $form->dropDownList($model,'area', Areas::cargaAreas(),array('class'=>'form-control','prompt'=>'...')); ?>
+  	</div>
+</div>
+ <div class='col-md-1' align="center">
+	<?php echo $form->labelEx($model,'tutela'); ?>
+	<div class="form-group">
+		<?php echo $form->checkBox($model,'tutela'); ?>
   	</div>
 </div>
 <div class="row">
